@@ -81,6 +81,13 @@ export function AdminBookingManagement() {
   useEffect(() => {
     if (users.length > 0) {
       fetchBookings();
+      // Set default user to the first user if none selected
+      if (!createForm.userId && users[0]) {
+        setCreateForm(prev => ({
+          ...prev,
+          userId: users[0].user_id
+        }));
+      }
     }
   }, [users]);
 
@@ -169,7 +176,9 @@ export function AdminBookingManagement() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create booking');
+        // Show more detailed error message
+        const errorMessage = data.details || data.error || 'Failed to create booking';
+        throw new Error(errorMessage);
       }
 
       toast.success('Booking created successfully');
@@ -179,8 +188,8 @@ export function AdminBookingManagement() {
         endDate: undefined,
         title: '',
         notes: '',
-        bedroomCount: 1,
-        userId: '',
+        bedroomCount: 4,
+        userId: users[0]?.user_id || '',
         status: 'APPROVED'
       });
       fetchBookings();
