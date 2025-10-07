@@ -222,3 +222,4 @@ For support, please create an issue in the GitHub repository or contact the deve
 # Force deployment Tue Oct  7 13:29:35 BST 2025
 # Force deployment Tue Oct  7 13:51:04 BST 2025
 # Trigger new deployment
+# Force Vercel deployment - Tue Oct  7 17:34:55 BST 2025
