@@ -117,11 +117,16 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
     );
   }
 
+  console.log('PhotoGallery rendering with photos:', photos);
+  console.log('Image load states:', imageLoadStates);
+
   return (
     <div className="space-y-6">
       {/* Photo Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {photos.map((photo) => (
+        {photos.map((photo) => {
+          console.log('Rendering photo:', photo);
+          return (
           <Card key={photo.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardContent className="p-0">
               {/* Photo */}
@@ -129,22 +134,27 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                 className="relative w-full h-64 cursor-pointer group bg-gray-200 border-2 border-gray-300"
                 onClick={() => setSelectedPhoto(photo)}
               >
-                {/* Debug info */}
-                <div className="absolute top-1 left-1 text-xs bg-black bg-opacity-50 text-white p-1 rounded">
-                  {imageLoadStates[photo.id] || 'unknown'}
+                {/* Large debug info */}
+                <div className="absolute top-2 left-2 text-sm bg-red-500 text-white p-2 rounded z-10">
+                  DEBUG: {imageLoadStates[photo.id] || 'unknown'}
                 </div>
                 
-                {/* Direct link for testing */}
-                <div className="absolute top-1 right-1">
+                {/* Large test button */}
+                <div className="absolute top-2 right-2 z-10">
                   <a 
                     href={photo.file_path} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-xs bg-blue-500 text-white px-1 py-0.5 rounded"
+                    className="text-sm bg-blue-500 text-white px-3 py-2 rounded font-bold"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    Test
+                    TEST IMAGE
                   </a>
+                </div>
+                
+                {/* URL display */}
+                <div className="absolute bottom-2 left-2 right-2 text-xs bg-yellow-200 p-1 rounded z-10">
+                  URL: {photo.file_path}
                 </div>
                 
                 <img
@@ -236,7 +246,8 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {/* Photo Modal */}
