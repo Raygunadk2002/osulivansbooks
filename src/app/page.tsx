@@ -303,9 +303,11 @@ export default function Home() {
       // Get form data
       const titleInput = document.querySelector('input[placeholder="e.g., Weekend Getaway"]') as HTMLInputElement;
       const notesInput = document.querySelector('textarea[placeholder="Any additional information..."]') as HTMLTextAreaElement;
+      const bedroomSelect = document.querySelector('select[defaultValue="4"]') as HTMLSelectElement;
       
       const title = titleInput?.value || 'Booking Request';
       const notes = notesInput?.value || '';
+      const bedroomCount = parseInt(bedroomSelect?.value || '4');
       
       // Create booking request
       const bookingData = {
@@ -313,6 +315,7 @@ export default function Home() {
         end_ts: selectedEndDate.toISOString(),
         title: title,
         notes: notes,
+        bedroom_count: bedroomCount,
         status: 'PENDING'
       };
       
@@ -382,6 +385,19 @@ export default function Home() {
                   className="w-full p-2 border rounded"
                   defaultValue="Weekend Getaway"
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Number of Bedrooms</label>
+                <select 
+                  className="w-full p-2 border rounded"
+                  defaultValue="4"
+                >
+                  <option value="1">1 Bedroom</option>
+                  <option value="2">2 Bedrooms</option>
+                  <option value="3">3 Bedrooms</option>
+                  <option value="4">4 Bedrooms</option>
+                </select>
               </div>
               
               <div>
