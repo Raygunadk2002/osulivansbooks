@@ -3,7 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { start_ts, end_ts, bedroom_count, booking_id } = await request.json();
+    const { start_ts, end_ts, bedroom_count } = await request.json();
 
     if (!start_ts || !end_ts || !bedroom_count) {
       return NextResponse.json(

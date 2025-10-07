@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Check database connection
     const supabase = createServiceRoleClient();
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('bookings')
       .select('count')
       .limit(1);

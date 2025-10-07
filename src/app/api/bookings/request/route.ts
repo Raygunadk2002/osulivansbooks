@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase';
-import { toInstant } from '@/lib/gaps';
 
 export async function POST(request: NextRequest) {
   try {

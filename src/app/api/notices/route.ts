@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase';
 
 // GET - List all notices
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createServiceRoleClient();
 
