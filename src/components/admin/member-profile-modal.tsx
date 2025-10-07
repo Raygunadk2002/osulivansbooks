@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -23,7 +22,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  RefreshCw
 } from 'lucide-react';
 
 interface MemberProfile {
@@ -79,7 +77,7 @@ export function MemberProfileModal({ isOpen, onClose, userId }: MemberProfileMod
     if (isOpen && userId) {
       fetchMemberData();
     }
-  }, [isOpen, userId]);
+  }, [isOpen, userId, fetchMemberData]);
 
   const fetchMemberData = async () => {
     if (!userId) return;
@@ -357,7 +355,7 @@ export function MemberProfileModal({ isOpen, onClose, userId }: MemberProfileMod
                   <div className="text-center py-8 text-gray-500">
                     <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                     <p>No bookings found</p>
-                    <p className="text-sm">This member hasn't made any booking requests yet</p>
+                    <p className="text-sm">This member hasn&apos;t made any booking requests yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3">

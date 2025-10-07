@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Trash2, User, Shield, Mail, Calendar, Search, Filter, Users, UserPlus, Edit, MoreHorizontal, Eye } from 'lucide-react';
+import { Trash2, User, Shield, Mail, Calendar, Search, Filter, Users, UserPlus, Eye } from 'lucide-react';
 import { MemberProfileModal } from './member-profile-modal';
 
 interface User {
@@ -46,7 +46,7 @@ export function UserManagement() {
 
   useEffect(() => {
     filterUsers();
-  }, [users, searchTerm, roleFilter]);
+  }, [users, searchTerm, roleFilter, filterUsers]);
 
   const filterUsers = () => {
     let filtered = users;
@@ -128,7 +128,7 @@ export function UserManagement() {
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-        } catch (jsonError) {
+        } catch {
           // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage;
         }
@@ -161,7 +161,7 @@ export function UserManagement() {
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-        } catch (jsonError) {
+        } catch {
           // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage;
         }
@@ -192,7 +192,7 @@ export function UserManagement() {
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-        } catch (jsonError) {
+        } catch {
           // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage;
         }
@@ -208,11 +208,6 @@ export function UserManagement() {
     return role === 'ADMIN' ? <Shield className="h-4 w-4" /> : <User className="h-4 w-4" />;
   };
 
-  const getRoleColor = (role: 'MEMBER' | 'ADMIN') => {
-    return role === 'ADMIN' 
-      ? 'text-purple-600 bg-purple-50 border-purple-200' 
-      : 'text-blue-600 bg-blue-50 border-blue-200';
-  };
 
   const closeDialog = () => {
     setShowCreateForm(false);
