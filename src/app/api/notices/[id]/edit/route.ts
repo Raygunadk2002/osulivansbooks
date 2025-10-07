@@ -23,8 +23,7 @@ export async function PUT(
       .from('notices')
       .update({
         title: title,
-        body: body,
-        updated_at: new Date().toISOString()
+        body: body
       })
       .eq('id', id)
       .select('*')
