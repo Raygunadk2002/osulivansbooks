@@ -46,6 +46,10 @@ interface Booking {
     display_name: string | null;
     email: string;
   };
+  profiles?: {
+    display_name: string | null;
+    email: string;
+  };
 }
 
 export function AdminBookingManagement() {
@@ -510,6 +514,63 @@ export function AdminBookingManagement() {
         </Dialog>
       </div>
 
+      {/* Pending Requests - Prominent Section */}
+      {bookings.filter(b => b.status === 'PENDING').length > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-800">
+              <AlertCircle className="h-5 w-5" />
+              Pending Booking Requests ({bookings.filter(b => b.status === 'PENDING').length})
+            </CardTitle>
+            <CardDescription className="text-yellow-700">
+              These booking requests need your review and approval
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {bookings.filter(b => b.status === 'PENDING').map((booking) => (
+                <div key={booking.id} className="flex items-center justify-between p-4 border border-yellow-200 rounded-lg bg-white">
+                  <div className="flex items-center space-x-4">
+                    <Clock className="h-5 w-5 text-yellow-500" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {booking.title || 'Untitled Booking'}
+                      </h3>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
+                        <User className="h-3 w-3" />
+                        <span>{booking.profiles?.display_name || booking.profiles?.email || booking.user?.display_name || booking.user?.email || 'Unknown User'}</span>
+                        <span>•</span>
+                        <span>{format(new Date(booking.start_ts), 'MMM dd')} - {format(new Date(booking.end_ts), 'MMM dd, yyyy')}</span>
+                        <span>•</span>
+                        <span>{booking.bedroom_count} bedroom{booking.bedroom_count !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleApproveBooking(booking.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleRejectBooking(booking.id)}
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Bookings List */}
       <Card>
         <CardHeader>
@@ -545,7 +606,7 @@ export function AdminBookingManagement() {
                       </h3>
                       <div className="flex items-center space-x-2 text-sm text-gray-600 mt-1">
                         <User className="h-3 w-3" />
-                        <span>{booking.user?.display_name || booking.user?.email || 'Unknown User'}</span>
+                        <span>{booking.profiles?.display_name || booking.profiles?.email || booking.user?.display_name || booking.user?.email || 'Unknown User'}</span>
                       </div>
                       <p className="text-sm text-gray-500">
                         {format(new Date(booking.start_ts), 'MMM dd')} - {format(new Date(booking.end_ts), 'MMM dd, yyyy')}

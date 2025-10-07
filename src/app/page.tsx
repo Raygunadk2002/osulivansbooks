@@ -29,6 +29,10 @@ interface Booking {
     display_name: string | null;
     email: string;
   };
+  profiles?: {
+    display_name: string | null;
+    email: string;
+  };
 }
 
 export default function Home() {
@@ -333,10 +337,8 @@ export default function Home() {
         toast.success(`Booking request submitted for ${selectedStartDate.toLocaleDateString()} to ${selectedEndDate.toLocaleDateString()}`);
         setShowBookingModal(false);
         clearSelection();
-        // Add the new booking to the list
-        if (result.booking) {
-          addBooking(result.booking);
-        }
+        // Refresh bookings to show the new pending request
+        await fetchBookings();
       } else {
         const error = await response.json();
         toast.error(`Failed to submit booking: ${error.message || 'Unknown error'}`);

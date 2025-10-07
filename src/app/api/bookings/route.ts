@@ -5,10 +5,16 @@ export async function GET() {
   try {
     const supabase = createServiceRoleClient();
 
-    // Get all bookings ordered by start date
+    // Get all bookings with user information ordered by start date
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select('*')
+      .select(`
+        *,
+        profiles!bookings_requester_id_fkey (
+          display_name,
+          email
+        )
+      `)
       .order('start_ts', { ascending: true });
 
     if (bookingsError) {

@@ -8,7 +8,13 @@ export async function GET(request: NextRequest) {
 
     const { data: bookings, error } = await supabase
       .from('bookings')
-      .select('*')
+      .select(`
+        *,
+        profiles!bookings_requester_id_fkey (
+          display_name,
+          email
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {

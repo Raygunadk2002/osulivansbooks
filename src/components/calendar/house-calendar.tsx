@@ -22,6 +22,10 @@ interface Booking {
     display_name: string | null;
     email: string;
   };
+  profiles?: {
+    display_name: string | null;
+    email: string;
+  };
 }
 
 interface DayStatus {
@@ -322,6 +326,12 @@ export function HouseCalendar({
                   {dayStatus.booking.title && (
                     <div className="text-xs truncate max-w-full" title={dayStatus.booking.title}>
                       {dayStatus.booking.title}
+                    </div>
+                  )}
+                  {/* Show user name for booked days */}
+                  {dayStatus.status === 'booked' && dayStatus.booking.profiles && (
+                    <div className="text-xs text-gray-600 truncate max-w-full" title={dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}>
+                      {dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}
                     </div>
                   )}
                 </div>
