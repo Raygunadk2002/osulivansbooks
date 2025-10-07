@@ -84,7 +84,7 @@ function generateICS(bookings: Array<{id: string, title: string, start_ts: strin
   bookings.forEach((booking, index) => {
     const startDate = formatDateForICS(booking.start_ts);
     const endDate = formatDateForICS(booking.end_ts);
-    const title = booking.title || `Booking by ${booking.profiles?.display_name || 'Unknown'}`;
+    const title = booking.title || `Booking #${booking.id}`;
     const uid = `booking-${index}-${Date.now()}@osullivanshouse.com`;
 
     ics.push(
