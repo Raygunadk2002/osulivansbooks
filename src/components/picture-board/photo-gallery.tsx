@@ -126,20 +126,29 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
             <CardContent className="p-0">
               {/* Photo */}
               <div 
-                className="relative w-full h-64 cursor-pointer group bg-gray-100"
+                className="relative w-full h-64 cursor-pointer group bg-gray-200 border-2 border-gray-300"
                 onClick={() => setSelectedPhoto(photo)}
               >
+                {/* Debug info */}
+                <div className="absolute top-1 left-1 text-xs bg-black bg-opacity-50 text-white p-1 rounded">
+                  {imageLoadStates[photo.id] || 'unknown'}
+                </div>
+                
                 <img
                   src={photo.file_path}
                   alt={photo.title}
                   className="w-full h-full object-cover"
-                  style={{ minHeight: '256px' }}
+                  style={{ 
+                    minHeight: '256px',
+                    backgroundColor: '#f3f4f6',
+                    border: '1px solid #d1d5db'
+                  }}
                   onLoad={() => {
-                    console.log('Thumbnail loaded successfully:', photo.file_path);
+                    console.log('✅ Thumbnail loaded successfully:', photo.file_path);
                     setImageLoadStates(prev => ({ ...prev, [photo.id]: 'loaded' }));
                   }}
                   onError={(e) => {
-                    console.error('Thumbnail failed to load:', photo.file_path);
+                    console.error('❌ Thumbnail failed to load:', photo.file_path);
                     setImageLoadStates(prev => ({ ...prev, [photo.id]: 'error' }));
                     // Fallback for missing images
                     const target = e.target as HTMLImageElement;
@@ -149,8 +158,15 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                 
                 {/* Loading indicator */}
                 {imageLoadStates[photo.id] === 'loading' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                    <div className="text-gray-500">Loading...</div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-blue-100">
+                    <div className="text-blue-600 font-semibold">Loading...</div>
+                  </div>
+                )}
+                
+                {/* Error indicator */}
+                {imageLoadStates[photo.id] === 'error' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-100">
+                    <div className="text-red-600 font-semibold">Failed to load</div>
                   </div>
                 )}
                 
