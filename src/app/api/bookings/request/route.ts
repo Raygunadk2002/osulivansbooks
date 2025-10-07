@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
-    // For development, we'll use a real user ID that exists
+    // For development, we'll use a mock user ID
     // In production, this would come from the authenticated user
-    const mockUserId = '45df5c03-76bf-43e5-b379-e11d9d109a87'; // admin@example.com
+    const mockUserId = 'mock-user-id';
     
     // Create the booking request
     const { data: booking, error: bookingError } = await supabase
