@@ -16,7 +16,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "type-check": "tsc --noEmit",
-    "analyze": "ANALYZE=true next build",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
