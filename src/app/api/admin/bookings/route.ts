@@ -8,13 +8,7 @@ export async function GET(request: NextRequest) {
 
     const { data: bookings, error } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        profiles!bookings_requester_id_fkey (
-          display_name,
-          email
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -25,7 +19,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ bookings: bookings || [] });
+    // Get all profiles to enrich booking data
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, email');
+
+    if (profilesError) {
+      console.error('Profiles error:', profilesError);
+      // Don't fail the request if profiles can't be fetched
+    }
+
+    // Enrich bookings with profile information
+    const enrichedBookings = (bookings || []).map(booking => {
+      const profile = profiles?.find(p => p.user_id === booking.requester_id);
+      return {
+        ...booking,
+        profiles: profile ? {
+          display_name: profile.display_name,
+          email: profile.email
+        } : null
+      };
+    });
+
+    return NextResponse.json({ bookings: enrichedBookings });
   } catch (error) {
     console.error('Get bookings error:', error);
     return NextResponse.json(
