@@ -66,6 +66,7 @@ export function AdminBookingManagement() {
     activeBedrooms: number;
     maxBedrooms: number;
     availableBedrooms: number;
+    totalBookings: number;
   } | null>(null);
 
   useEffect(() => {
@@ -91,7 +92,8 @@ export function AdminBookingManagement() {
         setCapacityInfo({
           activeBedrooms: data.activeBedrooms,
           maxBedrooms: data.maxBedrooms,
-          availableBedrooms: data.availableBedrooms
+          availableBedrooms: data.availableBedrooms,
+          totalBookings: data.totalBookings
         });
       }
     } catch (error) {

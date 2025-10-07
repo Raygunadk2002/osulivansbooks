@@ -73,12 +73,6 @@ export function MemberProfileModal({ isOpen, onClose, userId }: MemberProfileMod
   const [resettingPassword, setResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && userId) {
-      fetchMemberData();
-    }
-  }, [isOpen, userId, fetchMemberData]);
-
   const fetchMemberData = async () => {
     if (!userId) return;
     
@@ -102,6 +96,12 @@ export function MemberProfileModal({ isOpen, onClose, userId }: MemberProfileMod
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && userId) {
+      fetchMemberData();
+    }
+  }, [isOpen, userId, fetchMemberData]);
 
   const handleEdit = async () => {
     if (!userId) return;

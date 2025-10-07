@@ -23,6 +23,7 @@ interface Booking {
   notes: string | null;
   bedroom_count: number;
   created_at: string;
+  updated_at: string;
   user?: {
     display_name: string | null;
     email: string;
@@ -98,16 +99,60 @@ export default function Home() {
         console.error('Error response:', errorData);
         // Fallback to mock data if API fails
         setBookings([
-          { id: '1', start_ts: new Date(2024, 11, 15).toISOString(), end_ts: new Date(2024, 11, 16).toISOString(), status: 'APPROVED', title: 'Weekend Getaway', bedroom_count: 2 },
-          { id: '2', start_ts: new Date(2024, 11, 22).toISOString(), end_ts: new Date(2024, 11, 29).toISOString(), status: 'PENDING', title: 'Family Holiday', bedroom_count: 1 },
+          { 
+            id: '1', 
+            requester_id: 'mock-user-1',
+            start_ts: new Date(2024, 11, 15).toISOString(), 
+            end_ts: new Date(2024, 11, 16).toISOString(), 
+            status: 'APPROVED', 
+            title: 'Weekend Getaway', 
+            notes: 'Mock booking for testing',
+            bedroom_count: 2,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          { 
+            id: '2', 
+            requester_id: 'mock-user-2',
+            start_ts: new Date(2024, 11, 22).toISOString(), 
+            end_ts: new Date(2024, 11, 29).toISOString(), 
+            status: 'PENDING', 
+            title: 'Family Holiday', 
+            notes: 'Mock booking for testing',
+            bedroom_count: 1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
         ]);
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
       // Fallback to mock data
       setBookings([
-        { id: '1', start_ts: new Date(2024, 11, 15).toISOString(), end_ts: new Date(2024, 11, 16).toISOString(), status: 'APPROVED', title: 'Weekend Getaway', bedroom_count: 2 },
-        { id: '2', start_ts: new Date(2024, 11, 22).toISOString(), end_ts: new Date(2024, 11, 29).toISOString(), status: 'PENDING', title: 'Family Holiday', bedroom_count: 1 },
+        { 
+          id: '1', 
+          requester_id: 'mock-user-1',
+          start_ts: new Date(2024, 11, 15).toISOString(), 
+          end_ts: new Date(2024, 11, 16).toISOString(), 
+          status: 'APPROVED', 
+          title: 'Weekend Getaway', 
+          notes: 'Mock booking for testing',
+          bedroom_count: 2,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        { 
+          id: '2', 
+          requester_id: 'mock-user-2',
+          start_ts: new Date(2024, 11, 22).toISOString(), 
+          end_ts: new Date(2024, 11, 29).toISOString(), 
+          status: 'PENDING', 
+          title: 'Family Holiday', 
+          notes: 'Mock booking for testing',
+          bedroom_count: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
       ]);
     } finally {
       setLoading(false);
@@ -486,10 +531,10 @@ export default function Home() {
                 <h4 className="font-semibold text-sm text-gray-700 mb-2">Requested By</h4>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium">
-                    {selectedBooking.profiles?.display_name || selectedBooking.profiles?.email || 'Unknown User'}
+                    {selectedBooking.user?.display_name || selectedBooking.user?.email || 'Unknown User'}
                   </p>
-                  {selectedBooking.profiles?.email && (
-                    <p className="text-sm text-gray-600">{selectedBooking.profiles.email}</p>
+                  {selectedBooking.user?.email && (
+                    <p className="text-sm text-gray-600">{selectedBooking.user.email}</p>
                   )}
                 </div>
               </div>

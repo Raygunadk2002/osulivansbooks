@@ -44,10 +44,6 @@ export function UserManagement() {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, roleFilter, filterUsers]);
-
   const filterUsers = () => {
     let filtered = users;
 
@@ -66,6 +62,10 @@ export function UserManagement() {
 
     setFilteredUsers(filtered);
   };
+
+  useEffect(() => {
+    filterUsers();
+  }, [users, searchTerm, roleFilter, filterUsers]);
 
   const fetchUsers = async () => {
     setLoading(true);
