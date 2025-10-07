@@ -75,7 +75,12 @@ export async function POST(request: NextRequest) {
     if (bookingError) {
       console.error('Database error:', bookingError);
       return NextResponse.json(
-        { error: `Failed to create booking: ${bookingError.message}` },
+        { 
+          error: 'Failed to create booking',
+          details: bookingError.message,
+          code: bookingError.code,
+          hint: bookingError.hint
+        },
         { status: 500 }
       );
     }
