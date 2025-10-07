@@ -13,6 +13,22 @@ import { AdminBookingManagement } from '@/components/admin/admin-booking-managem
 import { HouseCalendar } from '@/components/calendar/house-calendar';
 import { useAuth } from '@/components/auth/auth-provider';
 
+interface Booking {
+  id: string;
+  requester_id: string;
+  status: string;
+  start_ts: string;
+  end_ts: string;
+  title: string | null;
+  notes: string | null;
+  bedroom_count: number;
+  created_at: string;
+  user?: {
+    display_name: string | null;
+    email: string;
+  };
+}
+
 export default function Home() {
   const { isAdmin, isUser, signInWithPassword, signOut } = useAuth();
   const [userEmail] = useState('alexkeal@me.com'); // Hardcoded email
