@@ -124,7 +124,9 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                   src={photo.file_path}
                   alt={photo.title}
                   className="w-full h-full object-cover"
+                  onLoad={() => console.log('Image loaded successfully:', photo.file_path)}
                   onError={(e) => {
+                    console.error('Image failed to load:', photo.file_path);
                     // Fallback for missing images
                     const target = e.target as HTMLImageElement;
                     target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';

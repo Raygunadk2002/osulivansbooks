@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
     const fileName = `photo_${timestamp}.${fileExtension}`;
-    const filePath = `photos/${fileName}`;
+    const filePath = fileName; // Don't include 'photos/' prefix since bucket is already 'photos'
     
     // Upload file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
