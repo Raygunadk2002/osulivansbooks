@@ -1,0 +1,15 @@
+# Copy these environment variables to your Vercel project settings
+
+NEXT_PUBLIC_SUPABASE_URL=https://aojoxcwoudpvhdhhsdfb.supabase.co
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvam94Y3dvdWRwdmhkaGhzZGZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTU3NTksImV4cCI6MjA3NTIzMTc1OX0.gzLK-f1UT9wjHWISAO-4WjcX1_f3wKGpYFYBgwSLST0
+
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvam94Y3dvdWRwdmhkaGhzZGZiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTY1NTc1OSwiZXhwIjoyMDc1MjMxNzU5fQ.MmG40bMiDSXZIYq1cN7_tN7blInULZq3FYKlatN9odw
+
+DEFAULT_TIMEZONE=Europe/London
+
+# Instructions:
+# 1. Go to your Vercel project settings
+# 2. Click "Environment Variables"
+# 3. Add each variable above
+# 4. Redeploy your project
