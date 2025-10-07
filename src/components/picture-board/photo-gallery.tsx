@@ -26,13 +26,22 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [imageLoadStates, setImageLoadStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
 
   const fetchPhotos = async () => {
     try {
       const response = await fetch('/api/photos');
       if (response.ok) {
         const data = await response.json();
-        setPhotos(data.photos || []);
+        const photosData = data.photos || [];
+        setPhotos(photosData);
+        
+        // Initialize loading states for all photos
+        const initialLoadStates: Record<string, 'loading'> = {};
+        photosData.forEach((photo: Photo) => {
+          initialLoadStates[photo.id] = 'loading';
+        });
+        setImageLoadStates(initialLoadStates);
       } else {
         toast.error('Failed to load photos');
       }
@@ -117,21 +126,33 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
             <CardContent className="p-0">
               {/* Photo */}
               <div 
-                className="relative aspect-square cursor-pointer group"
+                className="relative w-full h-64 cursor-pointer group bg-gray-100"
                 onClick={() => setSelectedPhoto(photo)}
               >
                 <img
                   src={photo.file_path}
                   alt={photo.title}
                   className="w-full h-full object-cover"
-                  onLoad={() => console.log('Image loaded successfully:', photo.file_path)}
+                  style={{ minHeight: '256px' }}
+                  onLoad={() => {
+                    console.log('Thumbnail loaded successfully:', photo.file_path);
+                    setImageLoadStates(prev => ({ ...prev, [photo.id]: 'loaded' }));
+                  }}
                   onError={(e) => {
-                    console.error('Image failed to load:', photo.file_path);
+                    console.error('Thumbnail failed to load:', photo.file_path);
+                    setImageLoadStates(prev => ({ ...prev, [photo.id]: 'error' }));
                     // Fallback for missing images
                     const target = e.target as HTMLImageElement;
                     target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
                   }}
                 />
+                
+                {/* Loading indicator */}
+                {imageLoadStates[photo.id] === 'loading' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <div className="text-gray-500">Loading...</div>
+                  </div>
+                )}
                 
                 {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
