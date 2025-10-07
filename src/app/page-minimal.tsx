@@ -1,4 +1,4 @@
-export default function HomePage() {
+export default function MinimalPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-4xl mx-auto">
@@ -10,10 +10,10 @@ export default function HomePage() {
         </p>
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-semibold mb-4">Welcome!</h2>
-          <p className="text-gray-600 mb-6">
-            This is a simplified version to test deployment. The full application will be restored once we confirm the basic routing works.
+          <p className="text-gray-600">
+            This is a minimal version of the page to test if basic routing works.
           </p>
-          <div className="space-y-4">
+          <div className="mt-6 space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg">
               <h3 className="font-semibold text-blue-800">Admin Login</h3>
               <p className="text-blue-600">Email: admin@osullivanhouse.com</p>
@@ -23,10 +23,6 @@ export default function HomePage() {
               <h3 className="font-semibold text-green-800">User Login</h3>
               <p className="text-green-600">Email: user@osullivanhouse.com</p>
               <p className="text-green-600">Password: user123</p>
-            </div>
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <h3 className="font-semibold text-yellow-800">Test Links</h3>
-              <p className="text-yellow-600">Try visiting: /test-simple</p>
             </div>
           </div>
         </div>
