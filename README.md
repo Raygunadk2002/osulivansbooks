@@ -221,3 +221,4 @@ For support, please create an issue in the GitHub repository or contact the deve
 # Force Vercel to use latest commit with all fixes
 # Force deployment Tue Oct  7 13:29:35 BST 2025
 # Force deployment Tue Oct  7 13:51:04 BST 2025
+# Trigger new deployment
