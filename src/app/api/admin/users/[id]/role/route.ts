@@ -4,10 +4,10 @@ import { createServiceRoleClient } from '@/lib/supabase';
 // PUT - Update user role
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { role } = await request.json();
 
     if (!role || !['MEMBER', 'ADMIN'].includes(role)) {
