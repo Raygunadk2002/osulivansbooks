@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, X, Calendar, BookOpen, MessageSquare, Users, Settings, Download, Wrench } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Calendar, BookOpen, MessageSquare, Users, Settings, Download, Wrench, Camera } from 'lucide-react';
 import { UserManagement } from '@/components/admin/user-management';
 import { Noticeboard } from '@/components/noticeboard/noticeboard';
 import { LandingPage } from '@/components/auth/landing-page';
 import { AdminActions } from '@/components/admin/admin-actions';
 import { AdminBookingManagement } from '@/components/admin/admin-booking-management';
 import { HouseCalendar } from '@/components/calendar/house-calendar';
+import { PictureBoard } from '@/components/picture-board/picture-board';
 import { useAuth } from '@/components/auth/auth-provider';
 
 interface Booking {
@@ -180,12 +181,14 @@ export default function Home() {
       { id: 'bookings', label: 'My Bookings', icon: BookOpen },
       { id: 'calendar', label: 'Calendar', icon: Calendar },
       { id: 'notices', label: 'Noticeboard', icon: MessageSquare },
+      { id: 'pictures', label: 'Picture Board', icon: Camera },
     ];
 
     const adminNavItems = [
       { id: 'bookings', label: 'Bookings', icon: BookOpen },
       { id: 'calendar', label: 'Calendar', icon: Calendar },
       { id: 'notices', label: 'Noticeboard', icon: MessageSquare },
+      { id: 'pictures', label: 'Picture Board', icon: Camera },
       { id: 'members', label: 'Members', icon: Users },
       { id: 'admin-actions', label: 'Admin Actions', icon: Wrench },
       { id: 'settings', label: 'Settings', icon: Settings },
@@ -907,6 +910,9 @@ export default function Home() {
       case 'notices':
         return <Noticeboard isAdmin={true} />;
 
+      case 'pictures':
+        return <PictureBoard />;
+
       case 'members':
         return <UserManagement />;
 
@@ -1244,6 +1250,9 @@ export default function Home() {
 
       case 'notices':
         return <Noticeboard isAdmin={false} />;
+
+      case 'pictures':
+        return <PictureBoard />;
 
           default:
             return (
