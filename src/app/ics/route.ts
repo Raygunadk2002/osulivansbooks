@@ -68,10 +68,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function generateICS(bookings: any[], houseName: string): string {
+function generateICS(bookings: Array<{id: string, title: string, start_ts: string, end_ts: string, status: string}>, houseName: string): string {
   const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   
-  let ics = [
+  const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//O\'Sullivan House//Booking Calendar//EN',

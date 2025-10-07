@@ -86,7 +86,7 @@ export function LandingPage({ onLogin }: LandingPageProps) {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  O'Sullivan House
+                  O&apos;Sullivan House
                 </h1>
                 <p className="text-sm text-white/80">Coastal Holiday Home</p>
               </div>
@@ -118,7 +118,7 @@ export function LandingPage({ onLogin }: LandingPageProps) {
               <h2 className="text-4xl font-bold text-white mb-4">
                 Welcome to{' '}
                 <span className="bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                  O'Sullivan House
+                  O&apos;Sullivan House
                 </span>
               </h2>
               <p className="text-xl text-white/90 mb-6">
@@ -284,7 +284,7 @@ export function LandingPage({ onLogin }: LandingPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <p className="text-sm text-white/90">
-              © 2024 O'Sullivan House. All rights reserved.
+              © 2024 O&apos;Sullivan House. All rights reserved.
             </p>
             <p className="text-xs text-white/70 mt-2">
               Secure member access to our coastal holiday home

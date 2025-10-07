@@ -11,12 +11,10 @@ import { LandingPage } from '@/components/auth/landing-page';
 import { AdminActions } from '@/components/admin/admin-actions';
 import { AdminBookingManagement } from '@/components/admin/admin-booking-management';
 import { HouseCalendar } from '@/components/calendar/house-calendar';
-import { DragSelectCalendar } from '@/components/calendar/drag-select-calendar';
-import { BookingRequestModal } from '@/components/booking/booking-request-modal';
 import { useAuth } from '@/components/auth/auth-provider';
 
 export default function Home() {
-  const { user, isAdmin, isUser, signInWithPassword, signOut } = useAuth();
+  const { isAdmin, isUser, signInWithPassword, signOut } = useAuth();
   const [userEmail] = useState('alexkeal@me.com'); // Hardcoded email
   const [currentView, setCurrentView] = useState('bookings'); // bookings, calendar, notices, members, settings, ics
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -24,8 +22,8 @@ export default function Home() {
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showBookingDetailsModal, setShowBookingDetailsModal] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [useDragSelect, setUseDragSelect] = useState(true);
 
@@ -139,7 +137,7 @@ export default function Home() {
       <nav className="bg-white border-b border-gray-200 px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <h1 className="text-xl font-bold text-gray-900">O'Sullivan House</h1>
+            <h1 className="text-xl font-bold text-gray-900">O&apos;Sullivan House</h1>
             <div className="flex space-x-1">
               {navItems.map((item) => {
                 const Icon = item.icon;

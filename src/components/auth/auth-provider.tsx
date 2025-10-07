@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: user.email,
         email: user.email,
         role: user.role,
-      } as any;
+      } as User;
 
       setUser(mockUser);
       setIsAdmin(user.role === 'admin');

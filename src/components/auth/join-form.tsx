@@ -30,7 +30,7 @@ export function JoinForm({ onSuccess }: { onSuccess: () => void }) {
         throw new Error(data.error || 'Failed to join');
       }
 
-      toast.success('Successfully joined O\'Sullivan House!');
+      toast.success('Successfully joined O&apos;Sullivan House!');
       onSuccess();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to join. Please try again.');

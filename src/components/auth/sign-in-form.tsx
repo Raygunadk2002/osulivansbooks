@@ -31,7 +31,7 @@ export function SignInForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Sign In to O'Sullivan House</CardTitle>
+        <CardTitle>Sign In to O&apos;Sullivan House</CardTitle>
         <CardDescription>
           Enter your email address to receive a magic link
         </CardDescription>
