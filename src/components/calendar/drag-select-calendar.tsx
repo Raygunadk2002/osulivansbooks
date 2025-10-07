@@ -132,10 +132,10 @@ export function DragSelectCalendar({
       status,
       booking,
       bedroomCount,
-      isSelected: isSelected || isInTempRange,
-      isStartDate: isStartDate || isTempStart,
-      isEndDate: isEndDate || isTempEnd,
-      isInRange: isSelected || isInTempRange
+      isSelected: Boolean(isSelected || isInTempRange),
+      isStartDate: Boolean(isStartDate || isTempStart),
+      isEndDate: Boolean(isEndDate || isTempEnd),
+      isInRange: Boolean(isSelected || isInTempRange)
     };
   };
 

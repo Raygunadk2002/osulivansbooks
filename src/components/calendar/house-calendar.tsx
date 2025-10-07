@@ -142,9 +142,9 @@ export function HouseCalendar({
       status,
       booking,
       bedroomCount,
-      isSelected,
-      isStartDate,
-      isEndDate
+      isSelected: Boolean(isSelected),
+      isStartDate: Boolean(isStartDate),
+      isEndDate: Boolean(isEndDate)
     };
   };
 

@@ -25,6 +25,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isUser, setIsUser] = useState(false);
   const supabase = createClient();
 
+  const checkUserRole = async (userId: string) => {
+    try {
+      const { data: member, error } = await supabase
+        .from('members')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking user role:', error);
+        setIsAdmin(false);
+        setIsUser(false);
+        return;
+      }
+
+      setIsAdmin(member?.role === 'ADMIN');
+      setIsUser(member?.role === 'USER' || member?.role === 'MEMBER');
+    } catch (error) {
+      console.error('Error checking user role:', error);
+      setIsAdmin(false);
+      setIsUser(false);
+    }
+  };
+
   useEffect(() => {
     // Handle auth code exchange if present in URL
     const handleAuthCode = async () => {
@@ -81,30 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [supabase.auth, checkUserRole]);
-
-  const checkUserRole = async (userId: string) => {
-    try {
-      const { data: member, error } = await supabase
-        .from('members')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error checking user role:', error);
-        setIsAdmin(false);
-        setIsUser(false);
-        return;
-      }
-
-      setIsAdmin(member?.role === 'ADMIN');
-      setIsUser(member?.role === 'USER' || member?.role === 'MEMBER');
-    } catch (error) {
-      console.error('Error checking user role:', error);
-      setIsAdmin(false);
-      setIsUser(false);
-    }
-  };
 
   const signIn = async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({

@@ -1,11 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 
 // Dynamically import FullCalendar to avoid SSR issues
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
+
+// Import types
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
+
+// Import plugins
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
 
 interface CalendarEvent {
   id: string;
@@ -44,7 +53,6 @@ export function FullCalendarComponent({
   onDateSelect, 
   onEventClick 
 }: FullCalendarComponentProps) {
-  const calendarRef = useRef<FullCalendar>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [backgroundEvents, setBackgroundEvents] = useState<BackgroundEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +93,15 @@ export function FullCalendarComponent({
 
   const handleEventClick = (clickInfo: EventClickArg) => {
     if (onEventClick) {
-      onEventClick(clickInfo.event.extendedProps);
+      const eventData: CalendarEvent = {
+        id: clickInfo.event.id,
+        title: clickInfo.event.title,
+        start: clickInfo.event.start?.toISOString() || '',
+        end: clickInfo.event.end?.toISOString() || '',
+        allDay: clickInfo.event.allDay || false,
+        extendedProps: clickInfo.event.extendedProps as { status?: string; type: "BOOKING" | "VISIT"; bookingId?: string; visitId?: string }
+      };
+      onEventClick(eventData);
     }
   };
 
@@ -100,7 +116,6 @@ export function FullCalendarComponent({
   return (
     <div className="w-full">
       <FullCalendar
-        ref={calendarRef}
         plugins={[
           dayGridPlugin,
           timeGridPlugin,
