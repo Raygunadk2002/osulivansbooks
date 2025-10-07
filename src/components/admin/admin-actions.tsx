@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import { 
   CalendarPlus, 
   CalendarX, 
-  Bed, 
   CalendarIcon,
   Plus,
   X

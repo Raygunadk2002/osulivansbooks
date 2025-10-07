@@ -17,7 +17,6 @@ import {
   Eye,
   EyeOff,
   LogIn,
-  UserPlus
 } from 'lucide-react';
 
 interface LandingPageProps {

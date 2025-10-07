@@ -21,7 +21,6 @@ import {
   Clock,
   AlertCircle,
   Plus,
-  Users,
   Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -107,7 +106,7 @@ export function AdminBookingManagement() {
       if (response.ok) {
         const data = await response.json();
         // Enrich bookings with user data
-        const enrichedBookings = data.bookings.map((booking: any) => {
+        const enrichedBookings = data.bookings.map((booking: Booking) => {
           const user = users.find(u => u.user_id === booking.requester_id);
           return {
             ...booking,

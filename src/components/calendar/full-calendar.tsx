@@ -44,7 +44,7 @@ export function FullCalendarComponent({
   onDateSelect, 
   onEventClick 
 }: FullCalendarComponentProps) {
-  const calendarRef = useRef<any>(null);
+  const calendarRef = useRef<FullCalendar>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [backgroundEvents, setBackgroundEvents] = useState<BackgroundEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,13 +77,13 @@ export function FullCalendarComponent({
     }
   };
 
-  const handleDateSelect = (selectInfo: any) => {
+  const handleDateSelect = (selectInfo: DateSelectArg) => {
     if (onDateSelect) {
       onDateSelect(selectInfo.start, selectInfo.end);
     }
   };
 
-  const handleEventClick = (clickInfo: any) => {
+  const handleEventClick = (clickInfo: EventClickArg) => {
     if (onEventClick) {
       onEventClick(clickInfo.event.extendedProps);
     }

@@ -98,11 +98,11 @@ export default function Home() {
     }
   };
 
-  const addBooking = (newBooking: any) => {
+  const addBooking = (newBooking: Booking) => {
     setBookings(prev => [...prev, newBooking]);
   };
 
-  const openBookingDetails = (booking: any) => {
+  const openBookingDetails = (booking: Booking) => {
     setSelectedBooking(booking);
     setShowBookingDetailsModal(true);
   };

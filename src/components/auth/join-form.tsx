@@ -43,7 +43,7 @@ export function JoinForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Join O'Sullivan House</CardTitle>
+        <CardTitle>Join O&apos;Sullivan House</CardTitle>
         <CardDescription>
           Enter the join code to become a member
         </CardDescription>
