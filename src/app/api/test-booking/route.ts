@@ -8,11 +8,11 @@ export async function POST() {
     // Test 1: Check if we can connect to Supabase
     console.log('Testing Supabase connection...');
     
-    // Test 2: Check if mock user exists
+    // Test 2: Check if existing user exists
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', 'mock-user-id')
+      .eq('user_id', '342575fd-ad57-4553-8a2c-1a8170aab430')
       .single();
     
     if (profileError) {
@@ -29,7 +29,7 @@ export async function POST() {
     const { data: member, error: memberError } = await supabase
       .from('members')
       .select('*')
-      .eq('user_id', 'mock-user-id')
+      .eq('user_id', '342575fd-ad57-4553-8a2c-1a8170aab430')
       .single();
     
     if (memberError) {
@@ -51,7 +51,7 @@ export async function POST() {
     const { data: testBooking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
-        requester_id: 'mock-user-id',
+        requester_id: '342575fd-ad57-4553-8a2c-1a8170aab430',
         status: 'PENDING',
         start_ts: testStartDate.toISOString(),
         end_ts: testEndDate.toISOString(),
