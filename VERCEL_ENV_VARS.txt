@@ -1,9 +1,11 @@
 # Copy these environment variables to your Vercel project settings
 
+# ✅ SAFE TO EXPOSE (Client-side)
 NEXT_PUBLIC_SUPABASE_URL=https://aojoxcwoudpvhdhhsdfb.supabase.co
 
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvam94Y3dvdWRwdmhkaGhzZGZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NTU3NTksImV4cCI6MjA3NTIzMTc1OX0.gzLK-f1UT9wjHWISAO-4WjcX1_f3wKGpYFYBgwSLST0
 
+# 🔒 SECRET (Server-side only - NOT exposed to browser)
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvam94Y3dvdWRwdmhkaGhzZGZiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTY1NTc1OSwiZXhwIjoyMDc1MjMxNzU5fQ.MmG40bMiDSXZIYq1cN7_tN7blInULZq3FYKlatN9odw
 
 DEFAULT_TIMEZONE=Europe/London
@@ -13,3 +15,8 @@ DEFAULT_TIMEZONE=Europe/London
 # 2. Click "Environment Variables"
 # 3. Add each variable above
 # 4. Redeploy your project
+
+# Security Notes:
+# - NEXT_PUBLIC_* variables are exposed to the browser (safe for anon key)
+# - Variables without NEXT_PUBLIC_ prefix are server-side only (secure)
+# - Service role key is now properly secured and only used in API routes

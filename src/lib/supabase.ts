@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export function createClient() {
   return createBrowserClient(
@@ -15,7 +16,7 @@ export function createServerSupabaseClient() {
 }
 
 export function createServiceRoleClient() {
-  return createBrowserClient(
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
