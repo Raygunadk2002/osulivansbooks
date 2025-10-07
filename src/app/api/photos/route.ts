@@ -8,14 +8,18 @@ export async function GET() {
     const { data: photos, error } = await supabase
       .from('photos')
       .select('*')
-      .order('uploaded_at', { ascending: false });
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching photos:', error);
-      return NextResponse.json({ error: 'Failed to fetch photos' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Failed to fetch photos',
+        details: error.message,
+        code: error.code
+      }, { status: 500 });
     }
     
-    return NextResponse.json(photos);
+    return NextResponse.json({ photos: photos || [] });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -26,8 +30,8 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
     
-    // For now, we'll use a mock user ID since we're using hardcoded auth
-    const mockUserId = 'mock-user-id';
+    // Use an existing user ID from the database
+    const mockUserId = '342575fd-ad57-4553-8a2c-1a8170aab430'; // Test Member user ID
     
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -74,7 +78,7 @@ export async function POST(request: NextRequest) {
       .from('photos')
       .insert({
         user_id: mockUserId,
-        display_name: displayName || 'Anonymous',
+        display_name: displayName || 'Test Member',
         title: title || 'Untitled Photo',
         description: description || '',
         file_path: filePath,
