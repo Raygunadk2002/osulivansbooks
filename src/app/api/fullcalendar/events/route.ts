@@ -78,7 +78,7 @@ export async function GET() {
       // Bookings
       ...bookings.map(booking => ({
         id: `booking-${booking.id}`,
-        title: booking.title || `Booking by ${booking.profiles?.display_name || 'Unknown'}`,
+        title: booking.title || `Booking by ${booking.profiles?.[0]?.display_name || 'Unknown'}`,
         start: booking.start_ts,
         end: booking.end_ts,
         allDay: true,
@@ -91,7 +91,7 @@ export async function GET() {
       // Visits
       ...visits.map(visit => ({
         id: `visit-${visit.id}`,
-        title: visit.title,
+        title: visit.title || `Visit by ${visit.profiles?.[0]?.display_name || 'Unknown'}`,
         start: visit.start_ts,
         end: visit.end_ts,
         allDay: true,
