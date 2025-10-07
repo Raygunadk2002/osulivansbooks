@@ -134,6 +134,19 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                   {imageLoadStates[photo.id] || 'unknown'}
                 </div>
                 
+                {/* Direct link for testing */}
+                <div className="absolute top-1 right-1">
+                  <a 
+                    href={photo.file_path} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs bg-blue-500 text-white px-1 py-0.5 rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Test
+                  </a>
+                </div>
+                
                 <img
                   src={photo.file_path}
                   alt={photo.title}
@@ -143,16 +156,19 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                     backgroundColor: '#f3f4f6',
                     border: '1px solid #d1d5db'
                   }}
+                  crossOrigin="anonymous"
                   onLoad={() => {
                     console.log('✅ Thumbnail loaded successfully:', photo.file_path);
                     setImageLoadStates(prev => ({ ...prev, [photo.id]: 'loaded' }));
                   }}
                   onError={(e) => {
                     console.error('❌ Thumbnail failed to load:', photo.file_path);
+                    console.error('Error details:', e);
                     setImageLoadStates(prev => ({ ...prev, [photo.id]: 'error' }));
-                    // Fallback for missing images
+                    // Try to load a test image to see if it's a general image loading issue
                     const target = e.target as HTMLImageElement;
-                    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=';
+                    console.log('Trying fallback image...');
+                    target.src = 'https://via.placeholder.com/300x200/cccccc/666666?text=Image+Failed+to+Load';
                   }}
                 />
                 
