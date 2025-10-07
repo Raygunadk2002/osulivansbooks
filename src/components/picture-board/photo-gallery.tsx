@@ -32,7 +32,7 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
       const response = await fetch('/api/photos');
       if (response.ok) {
         const data = await response.json();
-        setPhotos(data);
+        setPhotos(data.photos || []);
       } else {
         toast.error('Failed to load photos');
       }
