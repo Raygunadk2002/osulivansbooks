@@ -4,10 +4,10 @@ import { createServiceRoleClient } from '@/lib/supabase';
 // GET - Get detailed member information
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const supabase = createServiceRoleClient();
 
     // Get member profile
@@ -85,10 +85,10 @@ export async function GET(
 // DELETE - Delete a user (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const supabase = createServiceRoleClient();
 
     // First, get the user details for logging
