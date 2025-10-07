@@ -19,7 +19,8 @@ import {
   AlertCircle,
   Info,
   CheckCircle,
-  XCircle
+  XCircle,
+  Edit
 } from 'lucide-react';
 
 interface Notice {
@@ -42,7 +43,13 @@ export function Noticeboard({ isAdmin }: NoticeboardProps) {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [newNotice, setNewNotice] = useState({
+    title: '',
+    body: ''
+  });
+  const [editNotice, setEditNotice] = useState({
     title: '',
     body: ''
   });
@@ -143,6 +150,47 @@ export function Noticeboard({ isAdmin }: NoticeboardProps) {
     }
   };
 
+  const openEditDialog = (notice: Notice) => {
+    setEditingNotice(notice);
+    setEditNotice({
+      title: notice.title,
+      body: notice.body
+    });
+    setShowEditDialog(true);
+  };
+
+  const updateNotice = async () => {
+    if (!editingNotice || !editNotice.title.trim() || !editNotice.body.trim()) {
+      toast.error('Title and content are required');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/notices/${editingNotice.id}/edit`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editNotice),
+      });
+
+      if (response.ok) {
+        await response.json();
+        toast.success('Notice updated successfully');
+        setEditNotice({ title: '', body: '' });
+        setEditingNotice(null);
+        setShowEditDialog(false);
+        fetchNotices();
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to update notice: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating notice:', error);
+      toast.error('Failed to update notice');
+    }
+  };
+
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -232,6 +280,51 @@ export function Noticeboard({ isAdmin }: NoticeboardProps) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Notice Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Notice</DialogTitle>
+              <DialogDescription>
+                Update the notice title and content below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-title">Title</Label>
+                <Input
+                  id="edit-title"
+                  value={editNotice.title}
+                  onChange={(e) => setEditNotice({ ...editNotice, title: e.target.value })}
+                  placeholder="Enter notice title..."
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-content">Content</Label>
+                <Textarea
+                  id="edit-body"
+                  value={editNotice.body}
+                  onChange={(e) => setEditNotice({ ...editNotice, body: e.target.value })}
+                  placeholder="Enter notice content..."
+                  className="mt-1 min-h-[120px]"
+                />
+              </div>
+              <div className="flex gap-2 pt-4">
+                <Button onClick={updateNotice} className="flex-1">
+                  Update Notice
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditDialog(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {loading ? (
@@ -291,6 +384,14 @@ export function Noticeboard({ isAdmin }: NoticeboardProps) {
                         </div>
                         {isAdmin && (
                           <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditDialog(notice)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -358,6 +459,14 @@ export function Noticeboard({ isAdmin }: NoticeboardProps) {
                         </div>
                         {isAdmin && (
                           <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditDialog(notice)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
