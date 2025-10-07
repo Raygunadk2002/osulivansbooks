@@ -33,12 +33,11 @@ export async function GET(request: NextRequest) {
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
       .select(`
+        id,
         title,
         start_ts,
         end_ts,
-        profiles!bookings_requester_id_fkey (
-          display_name
-        )
+        status
       `)
       .eq('status', 'APPROVED')
       .order('start_ts', { ascending: true });
