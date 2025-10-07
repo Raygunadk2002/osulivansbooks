@@ -63,17 +63,32 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
     const fileName = `photo_${timestamp}.${fileExtension}`;
+    const filePath = `photos/${fileName}`;
     
-    // For now, we'll store the file in the public directory
-    // In production, you'd want to use a proper file storage service
-    const filePath = `/uploads/photos/${fileName}`;
+    // Upload file to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('photos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
     
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      return NextResponse.json({ 
+        error: 'Failed to upload file to storage',
+        details: uploadError.message 
+      }, { status: 500 });
+    }
     
-    // In a real application, you'd upload to a storage service like AWS S3, Cloudinary, etc.
-    // For now, we'll just store the metadata in the database
+    // Get public URL for the uploaded file
+    const { data: publicUrlData } = supabase.storage
+      .from('photos')
+      .getPublicUrl(filePath);
+    
+    const publicUrl = publicUrlData.publicUrl;
+    
+    // Store metadata in database
     const { data: photo, error } = await supabase
       .from('photos')
       .insert({
@@ -81,7 +96,7 @@ export async function POST(request: NextRequest) {
         display_name: displayName || 'Test Member',
         title: title || 'Untitled Photo',
         description: description || '',
-        file_path: filePath,
+        file_path: publicUrl, // Store the public URL instead of local path
         file_size: file.size,
         mime_type: file.type
       })
