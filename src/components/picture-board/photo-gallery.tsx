@@ -164,7 +164,11 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                   style={{ 
                     minHeight: '256px',
                     backgroundColor: '#f3f4f6',
-                    border: '1px solid #d1d5db'
+                    border: '1px solid #d1d5db',
+                    display: 'block',
+                    opacity: 1,
+                    zIndex: 1,
+                    position: 'relative'
                   }}
                   crossOrigin="anonymous"
                   onLoad={() => {
@@ -184,27 +188,29 @@ export function PhotoGallery({ isAdmin = false }: PhotoGalleryProps) {
                 
                 {/* Loading indicator */}
                 {imageLoadStates[photo.id] === 'loading' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-blue-100">
+                  <div className="absolute inset-0 flex items-center justify-center bg-blue-100 z-20">
                     <div className="text-blue-600 font-semibold">Loading...</div>
                   </div>
                 )}
                 
                 {/* Error indicator */}
                 {imageLoadStates[photo.id] === 'error' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-red-100">
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-100 z-20">
                     <div className="text-red-600 font-semibold">Failed to load</div>
                   </div>
                 )}
                 
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="text-white text-center">
-                      <div className="text-lg font-semibold">{photo.title}</div>
-                      <div className="text-sm">Click to view</div>
+                {/* Overlay on hover - only show when image is loaded */}
+                {imageLoadStates[photo.id] === 'loaded' && (
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center z-5">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="text-white text-center">
+                        <div className="text-lg font-semibold">{photo.title}</div>
+                        <div className="text-sm">Click to view</div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Delete button for admins */}
                 {isAdmin && (
