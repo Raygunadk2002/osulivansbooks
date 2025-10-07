@@ -1,9 +1,8 @@
 export default function TestPage() {
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold">Test Page</h1>
-      <p>If you can see this, Next.js is working!</p>
-      <p>Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Not set'}</p>
+    <div>
+      <h1>Test Page Works!</h1>
+      <p>If you can see this, basic routing is working.</p>
     </div>
-  )
+  );
 }
