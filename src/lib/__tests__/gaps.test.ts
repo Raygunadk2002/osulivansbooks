@@ -57,7 +57,7 @@ describe('Gaps Calculation', () => {
     });
 
     it('should handle no bookings', () => {
-      const bookedRanges: any[] = [];
+      const bookedRanges: Array<{ start: Date; end: Date }> = [];
       const from = new Date('2025-01-01');
       const to = new Date('2025-01-31');
       

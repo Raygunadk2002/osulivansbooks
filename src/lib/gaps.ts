@@ -96,7 +96,7 @@ export function rangesOverlap(range1: TimeRange, range2: TimeRange): boolean {
  * @param timezone Target timezone (default: Europe/London)
  * @returns UTC Date object
  */
-export function toInstant(dateOnly: string, timezone: string = 'Europe/London'): Date {
+export function toInstant(dateOnly: string, _timezone: string = 'Europe/London'): Date {
   // Create date at 15:00 local time to avoid DST issues
   const localDate = new Date(`${dateOnly}T15:00:00`);
   

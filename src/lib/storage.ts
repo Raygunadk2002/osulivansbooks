@@ -23,7 +23,7 @@ interface BookingWithProfile extends Booking {
 }
 
 // In-memory storage
-let bookings: BookingWithProfile[] = [
+const bookings: BookingWithProfile[] = [
   {
     id: '1',
     start_ts: new Date(2024, 11, 15).toISOString(),

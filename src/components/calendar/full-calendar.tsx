@@ -102,10 +102,10 @@ export function FullCalendarComponent({
       <FullCalendar
         ref={calendarRef}
         plugins={[
-          require('@fullcalendar/daygrid'),
-          require('@fullcalendar/timegrid'),
-          require('@fullcalendar/interaction'),
-          require('@fullcalendar/list'),
+          dayGridPlugin,
+          timeGridPlugin,
+          interactionPlugin,
+          listPlugin,
         ]}
         headerToolbar={{
           left: 'prev,next today',

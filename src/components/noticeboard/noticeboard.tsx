@@ -16,7 +16,6 @@ import {
   MessageSquare, 
   Clock, 
   User, 
-  Star,
   AlertCircle,
   Info,
   CheckCircle,
@@ -86,7 +85,7 @@ export function Noticeboard({ isAdmin }: NoticeboardProps) {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         toast.success('Notice created successfully');
         setNewNotice({ title: '', body: '' });
         setShowCreateDialog(false);
