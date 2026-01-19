@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, X, Calendar, BookOpen, MessageSquare, Users, Settings, Download, Wrench, Camera } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Calendar, BookOpen, MessageSquare, Users, Settings, Download, Wrench, Camera, Copy, ExternalLink, RefreshCw, List, User, Bed, Plus } from 'lucide-react';
 import { UserManagement } from '@/components/admin/user-management';
 import { Noticeboard } from '@/components/noticeboard/noticeboard';
 import { LandingPage } from '@/components/auth/landing-page';
@@ -13,6 +13,232 @@ import { AdminBookingManagement } from '@/components/admin/admin-booking-managem
 import { HouseCalendar } from '@/components/calendar/house-calendar';
 import { PictureBoard } from '@/components/picture-board/picture-board';
 import { useAuth } from '@/components/auth/auth-provider';
+
+// ICS Feed Management Component
+function ICSFeedManagement() {
+  const [icsToken, setIcsToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [rotating, setRotating] = useState(false);
+
+  useEffect(() => {
+    fetchIcsToken();
+  }, []);
+
+  const fetchIcsToken = async () => {
+    try {
+      const response = await fetch('/api/admin/ics-settings');
+      if (response.ok) {
+        const data = await response.json();
+        setIcsToken(data.ics_token || null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch ICS token:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const rotateToken = async () => {
+    setRotating(true);
+    try {
+      const response = await fetch('/api/admin/rotate-ics', { method: 'POST' });
+      if (response.ok) {
+        const data = await response.json();
+        setIcsToken(data.newToken);
+        toast.success('ICS token rotated successfully! Share the new URL with members.');
+      } else {
+        toast.error('Failed to rotate token');
+      }
+    } catch (error) {
+      toast.error('Failed to rotate token');
+    } finally {
+      setRotating(false);
+    }
+  };
+
+  const getBaseUrl = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return '';
+  };
+
+  const icsUrl = icsToken ? `${getBaseUrl()}/ics?token=${icsToken}` : '';
+  const webcalUrl = icsToken ? `webcal://${getBaseUrl().replace(/^https?:\/\//, '')}/ics?token=${icsToken}` : '';
+  const googleCalUrl = icsToken ? `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}` : '';
+
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied to clipboard!`);
+    } catch {
+      toast.error('Failed to copy to clipboard');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold">ICS Feed Management</h2>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-2">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">ICS Feed Management</h2>
+      
+      {/* Google Calendar Subscription */}
+      <Card className="border-green-200 bg-green-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-green-800">
+            <Calendar className="h-5 w-5" />
+            Subscribe with Google Calendar
+          </CardTitle>
+          <CardDescription>One-click subscription to add bookings to your Google Calendar</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={() => window.open(googleCalUrl, '_blank')}
+              disabled={!icsToken}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Add to Google Calendar
+            </Button>
+            <p className="text-xs text-green-700">
+              This will open Google Calendar and prompt you to subscribe. The calendar will auto-update when bookings change.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Manual Subscription URLs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Calendar Subscription URLs</CardTitle>
+          <CardDescription>Use these URLs to subscribe from any calendar app (Apple Calendar, Outlook, etc.)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Webcal URL (recommended for subscriptions) */}
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Subscription URL (Recommended)
+              </h3>
+              <p className="text-sm text-gray-600 mb-2">Use this for Apple Calendar, Outlook, and most calendar apps:</p>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={webcalUrl || 'No token available'} 
+                  readOnly 
+                  className="flex-1 p-2 border rounded bg-gray-50 text-sm font-mono"
+                />
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => copyToClipboard(webcalUrl, 'Webcal URL')}
+                  disabled={!icsToken}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* HTTPS URL (fallback) */}
+            <div className="p-4 border rounded-lg">
+              <h3 className="font-semibold mb-2">HTTPS URL (Fallback)</h3>
+              <p className="text-sm text-gray-600 mb-2">If webcal doesn&apos;t work, use this HTTPS URL:</p>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={icsUrl || 'No token available'} 
+                  readOnly 
+                  className="flex-1 p-2 border rounded bg-gray-50 text-sm font-mono"
+                />
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => copyToClipboard(icsUrl, 'ICS URL')}
+                  disabled={!icsToken}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>How to Subscribe</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 text-sm">
+            <div>
+              <h4 className="font-semibold text-green-700">📱 Google Calendar (Mobile/Web)</h4>
+              <ol className="list-decimal list-inside ml-2 text-gray-600 space-y-1">
+                <li>Click the &quot;Add to Google Calendar&quot; button above</li>
+                <li>Confirm the subscription in the popup</li>
+                <li>The calendar will appear in &quot;Other calendars&quot;</li>
+              </ol>
+            </div>
+            <div>
+              <h4 className="font-semibold text-blue-700">🍎 Apple Calendar (iPhone/Mac)</h4>
+              <ol className="list-decimal list-inside ml-2 text-gray-600 space-y-1">
+                <li>Copy the Subscription URL above</li>
+                <li>Open Calendar → File → New Calendar Subscription</li>
+                <li>Paste the URL and click Subscribe</li>
+              </ol>
+            </div>
+            <div>
+              <h4 className="font-semibold text-purple-700">📧 Outlook</h4>
+              <ol className="list-decimal list-inside ml-2 text-gray-600 space-y-1">
+                <li>Copy the HTTPS URL above</li>
+                <li>Go to Calendar → Add Calendar → Subscribe from web</li>
+                <li>Paste the URL and give it a name</li>
+              </ol>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Token Management (Admin) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Security</CardTitle>
+          <CardDescription>Rotate the token if you need to invalidate old subscription links</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Current token: <code className="bg-gray-100 px-2 py-1 rounded">{icsToken ? icsToken.substring(0, 8) + '...' : 'None'}</code></p>
+              <p className="text-xs text-gray-500 mt-1">Rotating will invalidate all existing subscription links</p>
+            </div>
+            <Button 
+              variant="outline"
+              onClick={rotateToken}
+              disabled={rotating}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${rotating ? 'animate-spin' : ''}`} />
+              {rotating ? 'Rotating...' : 'Rotate Token'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 interface Booking {
   id: string;
@@ -48,6 +274,20 @@ export default function Home() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [useDragSelect, setUseDragSelect] = useState(true);
+  
+  // Booking form state
+  const [bookingForm, setBookingForm] = useState({
+    title: 'Weekend Getaway',
+    notes: '',
+    bedroomCount: 4
+  });
+  
+  // Calendar refresh trigger - increment to force calendar to refetch bookings
+  const [calendarRefresh, setCalendarRefresh] = useState(0);
+  
+  // Agenda view state
+  const [calendarViewMode, setCalendarViewMode] = useState<'calendar' | 'agenda'>('calendar');
+  const [agendaFilter, setAgendaFilter] = useState<'mine' | 'everyone'>('everyone');
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -238,7 +478,9 @@ export default function Home() {
   };
 
   const handleDateClick = (date: Date) => {
+    console.log('Page: handleDateClick called with date:', date.toISOString());
     const dayStatus = getDayStatus(date);
+    console.log('Page: dayStatus:', dayStatus);
     
     // Don't allow selection of booked dates
     if (dayStatus.status === 'booked') {
@@ -254,8 +496,11 @@ export default function Home() {
       return;
     }
     
+    console.log('Page: Current selection - start:', selectedStartDate, 'end:', selectedEndDate);
+    
     if (!selectedStartDate) {
       // First date selection
+      console.log('Page: Setting start date');
       setSelectedStartDate(date);
       setSelectedEndDate(null);
       toast.info(`Start date selected: ${date.toLocaleDateString()}`);
@@ -263,15 +508,18 @@ export default function Home() {
       // Second date selection
       if (date < selectedStartDate) {
         // If second date is before first, swap them
+        console.log('Page: Setting end date (swapped)');
         setSelectedEndDate(selectedStartDate);
         setSelectedStartDate(date);
         toast.info(`Date range selected: ${date.toLocaleDateString()} to ${selectedStartDate.toLocaleDateString()}`);
       } else {
+        console.log('Page: Setting end date');
         setSelectedEndDate(date);
         toast.info(`Date range selected: ${selectedStartDate.toLocaleDateString()} to ${date.toLocaleDateString()}`);
       }
     } else {
       // Reset selection
+      console.log('Page: Resetting selection with new start date');
       setSelectedStartDate(date);
       setSelectedEndDate(null);
       toast.info(`New start date selected: ${date.toLocaleDateString()}`);
@@ -303,25 +551,19 @@ export default function Home() {
       return;
     }
     
+    setLoading(true);
     try {
-      // Get form data
-      const titleInput = document.querySelector('input[placeholder="e.g., Weekend Getaway"]') as HTMLInputElement;
-      const notesInput = document.querySelector('textarea[placeholder="Any additional information..."]') as HTMLTextAreaElement;
-      const bedroomSelect = document.querySelector('select[defaultValue="4"]') as HTMLSelectElement;
-      
-      const title = titleInput?.value || 'Booking Request';
-      const notes = notesInput?.value || '';
-      const bedroomCount = parseInt(bedroomSelect?.value || '4');
-      
-      // Create booking request
+      // Create booking request using form state
       const bookingData = {
         start_ts: selectedStartDate.toISOString(),
         end_ts: selectedEndDate.toISOString(),
-        title: title,
-        notes: notes,
-        bedroom_count: bedroomCount,
+        title: bookingForm.title || 'Booking Request',
+        notes: bookingForm.notes || '',
+        bedroom_count: bookingForm.bedroomCount,
         status: 'PENDING'
       };
+      
+      console.log('Submitting booking:', bookingData);
       
       // Call the API
       const response = await fetch('/api/bookings/request', {
@@ -332,20 +574,27 @@ export default function Home() {
         body: JSON.stringify(bookingData),
       });
       
+      const result = await response.json();
+      
       if (response.ok) {
-        const result = await response.json();
         toast.success(`Booking request submitted for ${selectedStartDate.toLocaleDateString()} to ${selectedEndDate.toLocaleDateString()}`);
         setShowBookingModal(false);
+        // Reset form
+        setBookingForm({ title: 'Weekend Getaway', notes: '', bedroomCount: 4 });
         clearSelection();
         // Refresh bookings to show the new pending request
         await fetchBookings();
+        // Trigger calendar refresh to show new booking
+        setCalendarRefresh(prev => prev + 1);
       } else {
-        const error = await response.json();
-        toast.error(`Failed to submit booking: ${error.message || 'Unknown error'}`);
+        console.error('Booking error:', result);
+        toast.error(`Failed to submit booking: ${result.error || result.details || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Booking submission error:', error);
       toast.error('Failed to submit booking request. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -385,7 +634,8 @@ export default function Home() {
                   type="text" 
                   placeholder="e.g., Weekend Getaway"
                   className="w-full p-2 border rounded"
-                  defaultValue="Weekend Getaway"
+                  value={bookingForm.title}
+                  onChange={(e) => setBookingForm({ ...bookingForm, title: e.target.value })}
                 />
               </div>
               
@@ -393,12 +643,13 @@ export default function Home() {
                 <label className="block text-sm font-medium mb-2">Number of Bedrooms</label>
                 <select 
                   className="w-full p-2 border rounded"
-                  defaultValue="4"
+                  value={bookingForm.bedroomCount}
+                  onChange={(e) => setBookingForm({ ...bookingForm, bedroomCount: parseInt(e.target.value) })}
                 >
-                  <option value="1">1 Bedroom</option>
-                  <option value="2">2 Bedrooms</option>
-                  <option value="3">3 Bedrooms</option>
-                  <option value="4">4 Bedrooms</option>
+                  <option value={1}>1 Bedroom</option>
+                  <option value={2}>2 Bedrooms</option>
+                  <option value={3}>3 Bedrooms</option>
+                  <option value={4}>4 Bedrooms</option>
                 </select>
               </div>
               
@@ -407,7 +658,8 @@ export default function Home() {
                 <textarea 
                   placeholder="Any additional information..."
                   className="w-full p-2 border rounded h-20"
-                  defaultValue="Looking forward to a relaxing weekend!"
+                  value={bookingForm.notes}
+                  onChange={(e) => setBookingForm({ ...bookingForm, notes: e.target.value })}
                 />
               </div>
               
@@ -415,12 +667,14 @@ export default function Home() {
                 <Button 
                   onClick={submitBookingRequest}
                   className="flex-1"
+                  disabled={loading}
                 >
-                  Submit Request
+                  {loading ? 'Submitting...' : 'Submit Request'}
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => setShowBookingModal(false)}
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
@@ -714,11 +968,12 @@ export default function Home() {
     const isStartDate = selectedStartDate && date.toDateString() === selectedStartDate.toDateString();
     const isEndDate = selectedEndDate && date.toDateString() === selectedEndDate.toDateString();
     
-    // Check if date is in any booking
+    // Check if date is in any booking (compare dates only, ignore time)
+    const dateStr = date.toISOString().split('T')[0];
     const booking = bookings.find(b => {
-      const startDate = new Date(b.start_ts);
-      const endDate = new Date(b.end_ts);
-      return date >= startDate && date <= endDate;
+      const startStr = new Date(b.start_ts).toISOString().split('T')[0];
+      const endStr = new Date(b.end_ts).toISOString().split('T')[0];
+      return dateStr >= startStr && dateStr <= endStr;
     });
     
     let status = 'available';
@@ -860,9 +1115,18 @@ export default function Home() {
   const renderAdminView = () => {
     switch (currentView) {
       case 'bookings':
-        return <AdminBookingManagement />;
+        return <AdminBookingManagement onBookingChange={() => setCalendarRefresh(prev => prev + 1)} />;
 
       case 'calendar':
+        // Get future bookings for admin agenda view (exclude cancelled/rejected)
+        const adminToday = new Date();
+        adminToday.setHours(0, 0, 0, 0);
+        
+        const adminFutureBookings = bookings
+          .filter(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED')
+          .filter(b => new Date(b.end_ts) >= adminToday)
+          .sort((a, b) => new Date(a.start_ts).getTime() - new Date(b.start_ts).getTime());
+        
         return (
           <div className="space-y-6">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -870,52 +1134,174 @@ export default function Home() {
             </h2>
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>House Availability</CardTitle>
-                    <CardDescription>View all bookings and house availability - select dates to create bookings</CardDescription>
+                    <CardTitle>{calendarViewMode === 'calendar' ? 'House Availability' : 'Upcoming Bookings'}</CardTitle>
+                    <CardDescription>
+                      {calendarViewMode === 'calendar' 
+                        ? 'View all bookings and house availability - select dates to create bookings' 
+                        : 'List of all future bookings'}
+                    </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Drag Select:</span>
-                    <Button
-                      variant={useDragSelect ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setUseDragSelect(!useDragSelect)}
-                    >
-                      {useDragSelect ? "On" : "Off"}
-                    </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                      <Button
+                        variant={calendarViewMode === 'calendar' ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCalendarViewMode('calendar')}
+                        className="h-8"
+                      >
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Calendar
+                      </Button>
+                      <Button
+                        variant={calendarViewMode === 'agenda' ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCalendarViewMode('agenda')}
+                        className="h-8"
+                      >
+                        <List className="h-4 w-4 mr-1" />
+                        Agenda
+                      </Button>
+                    </div>
+                    
+                    {/* Drag Select (only in calendar mode) */}
+                    {calendarViewMode === 'calendar' && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Drag Select:</span>
+                        <Button
+                          variant={useDragSelect ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setUseDragSelect(!useDragSelect)}
+                        >
+                          {useDragSelect ? "On" : "Off"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <HouseCalendar 
-                  isAdmin={true}
-                  onDateClick={handleDateClick}
-                  selectedStartDate={selectedStartDate}
-                  selectedEndDate={selectedEndDate}
-                />
-                
-                {/* Admin Booking Controls */}
-                {selectedStartDate && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-semibold mb-2">Selected Dates:</h4>
-                    <p className="text-sm text-gray-700">
-                      {selectedStartDate.toLocaleDateString()}
-                      {selectedEndDate ? ` to ${selectedEndDate.toLocaleDateString()}` : ' (select end date)'}
-                    </p>
-                    <div className="mt-3 flex gap-2">
-                      <Button
-                        onClick={openBookingModal}
-                        disabled={!selectedStartDate || !selectedEndDate}
-                        className="bg-blue-600 hover:bg-blue-700"
+                {calendarViewMode === 'calendar' ? (
+                  <>
+                    <HouseCalendar 
+                      isAdmin={true}
+                      onDateClick={handleDateClick}
+                      selectedStartDate={selectedStartDate}
+                      selectedEndDate={selectedEndDate}
+                      refreshTrigger={calendarRefresh}
+                    />
+                    
+                    {/* Admin Booking Controls */}
+                    {selectedStartDate && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Selected Dates:</h4>
+                        <p className="text-sm text-gray-700">
+                          {selectedStartDate.toLocaleDateString()}
+                          {selectedEndDate ? ` to ${selectedEndDate.toLocaleDateString()}` : ' (select end date)'}
+                        </p>
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            onClick={openBookingModal}
+                            disabled={!selectedStartDate || !selectedEndDate}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Create Booking
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={clearSelection}
+                          >
+                            Clear Selection
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* Admin Agenda View */
+                  <div className="space-y-3">
+                    {adminFutureBookings.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Calendar className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                        <p>No upcoming bookings</p>
+                      </div>
+                    ) : (
+                      adminFutureBookings.map((booking) => {
+                        const startDate = new Date(booking.start_ts);
+                        const endDate = new Date(booking.end_ts);
+                        const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                        const isOngoing = startDate <= adminToday;
+                        
+                        return (
+                          <div 
+                            key={booking.id} 
+                            className={`p-4 border rounded-lg transition-colors ${
+                              booking.status === 'APPROVED' ? 'bg-green-50 border-green-200 hover:bg-green-100' :
+                              booking.status === 'PENDING' ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100' :
+                              booking.status === 'HOLD' ? 'bg-orange-50 border-orange-200 hover:bg-orange-100' :
+                              'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold text-lg">{booking.title || 'Untitled Booking'}</h3>
+                                  {isOngoing && (
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                                      Ongoing
+                                    </span>
+                                  )}
+                                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    booking.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                    booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                    booking.status === 'HOLD' ? 'bg-orange-100 text-orange-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {booking.status}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-600 mt-1">
+                                  <span className="font-medium">
+                                    {startDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                  </span>
+                                  {' → '}
+                                  <span className="font-medium">
+                                    {endDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                  </span>
+                                  <span className="text-gray-400 ml-2">({nights} night{nights !== 1 ? 's' : ''})</span>
+                                </div>
+                                {booking.profiles && (
+                                  <div className="text-sm text-gray-500 mt-1">
+                                    <User className="h-3 w-3 inline mr-1" />
+                                    {booking.profiles.display_name || booking.profiles.email}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="flex items-center gap-1 text-gray-600">
+                                  <Bed className="h-4 w-4" />
+                                  <span>{booking.bedroom_count} bed{booking.bedroom_count !== 1 ? 's' : ''}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {booking.notes && (
+                              <p className="text-sm text-gray-500 mt-2 border-t pt-2">{booking.notes}</p>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                    
+                    {/* Quick action to book */}
+                    <div className="pt-4 border-t mt-4">
+                      <Button 
+                        onClick={() => setCalendarViewMode('calendar')}
+                        className="w-full"
                       >
-                        Create Booking
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={clearSelection}
-                      >
-                        Clear Selection
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create New Booking
                       </Button>
                     </div>
                   </div>
@@ -993,51 +1379,7 @@ export default function Home() {
         );
 
       case 'ics':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">ICS Feed Management</h2>
-            <Card>
-              <CardHeader>
-                <CardTitle>Calendar Integration</CardTitle>
-                <CardDescription>Generate and manage ICS feeds for external calendars</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Public ICS Feed</h3>
-                    <p className="text-sm text-gray-600 mb-2">Share this URL with members for calendar integration:</p>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value="https://osulivansbooks.com/ics/abc123" 
-                        readOnly 
-                        className="flex-1 p-2 border rounded bg-gray-50"
-                      />
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => toast.success('ICS URL copied to clipboard!')}
-                      >
-                        Copy
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={() => toast.success('New token generated!')}>
-                      Generate New Token
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => toast.success('Token rotated successfully!')}
-                    >
-                      Rotate Token
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <ICSFeedManagement />;
 
       default:
         return (
@@ -1125,10 +1467,10 @@ export default function Home() {
                   <div className="text-center py-4">Loading your bookings...</div>
                 ) : (
                   <div className="space-y-4">
-                    {bookings.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500">You have no bookings yet</div>
+                    {bookings.filter(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED').length === 0 ? (
+                      <div className="text-center py-4 text-gray-500">You have no active bookings</div>
                     ) : (
-                      bookings.map((booking) => (
+                      bookings.filter(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED').map((booking) => (
                         <div key={booking.id} className="p-4 border rounded-lg">
                           <div className="flex justify-between items-start">
                             <div>
@@ -1203,6 +1545,16 @@ export default function Home() {
         );
 
       case 'calendar':
+        // Get future bookings for agenda view (exclude cancelled/rejected)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const futureBookings = bookings
+          .filter(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED')
+          .filter(b => new Date(b.end_ts) >= today)
+          .filter(b => agendaFilter === 'everyone' || b.requester_id === user?.id)
+          .sort((a, b) => new Date(a.start_ts).getTime() - new Date(b.start_ts).getTime());
+        
         return (
           <div className="space-y-6">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -1210,53 +1562,197 @@ export default function Home() {
             </h2>
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle>Calendar View</CardTitle>
-                    <CardDescription>Check house availability and navigate through months</CardDescription>
+                    <CardTitle>{calendarViewMode === 'calendar' ? 'Calendar View' : 'Upcoming Bookings'}</CardTitle>
+                    <CardDescription>
+                      {calendarViewMode === 'calendar' 
+                        ? 'Check house availability and navigate through months' 
+                        : 'List of future bookings'}
+                    </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Drag Select:</span>
-                    <Button
-                      variant={useDragSelect ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setUseDragSelect(!useDragSelect)}
-                    >
-                      {useDragSelect ? "On" : "Off"}
-                    </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                      <Button
+                        variant={calendarViewMode === 'calendar' ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCalendarViewMode('calendar')}
+                        className="h-8"
+                      >
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Calendar
+                      </Button>
+                      <Button
+                        variant={calendarViewMode === 'agenda' ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCalendarViewMode('agenda')}
+                        className="h-8"
+                      >
+                        <List className="h-4 w-4 mr-1" />
+                        Agenda
+                      </Button>
+                    </div>
+                    
+                    {/* Drag Select (only in calendar mode) */}
+                    {calendarViewMode === 'calendar' && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Drag Select:</span>
+                        <Button
+                          variant={useDragSelect ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setUseDragSelect(!useDragSelect)}
+                        >
+                          {useDragSelect ? "On" : "Off"}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Filter Toggle (only in agenda mode) */}
+                    {calendarViewMode === 'agenda' && (
+                      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                        <Button
+                          variant={agendaFilter === 'everyone' ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setAgendaFilter('everyone')}
+                          className="h-8"
+                        >
+                          Everyone
+                        </Button>
+                        <Button
+                          variant={agendaFilter === 'mine' ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setAgendaFilter('mine')}
+                          className="h-8"
+                        >
+                          Mine
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <HouseCalendar 
-                  isAdmin={false}
-                  onDateClick={handleDateClick}
-                  selectedStartDate={selectedStartDate}
-                  selectedEndDate={selectedEndDate}
-                />
-                
-                {/* Date Selection Controls */}
-                {selectedStartDate && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-semibold mb-2">Selected Dates:</h4>
-                    <p className="text-sm text-gray-700">
-                      {selectedStartDate.toLocaleDateString()}
-                      {selectedEndDate ? ` to ${selectedEndDate.toLocaleDateString()}` : ' (select end date)'}
-                    </p>
-                    <div className="mt-3 flex gap-2">
+                {calendarViewMode === 'calendar' ? (
+                  <>
+                    <HouseCalendar 
+                      isAdmin={false}
+                      onDateClick={handleDateClick}
+                      selectedStartDate={selectedStartDate}
+                      selectedEndDate={selectedEndDate}
+                      refreshTrigger={calendarRefresh}
+                    />
+                    
+                    {/* Date Selection Controls */}
+                    {selectedStartDate && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Selected Dates:</h4>
+                        <p className="text-sm text-gray-700">
+                          {selectedStartDate.toLocaleDateString()}
+                          {selectedEndDate ? ` to ${selectedEndDate.toLocaleDateString()}` : ' (select end date)'}
+                        </p>
+                        <div className="mt-3 flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={openBookingModal}
+                            disabled={!selectedEndDate}
+                          >
+                            Request Booking
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={clearSelection}
+                          >
+                            Clear Selection
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* Agenda View */
+                  <div className="space-y-3">
+                    {futureBookings.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Calendar className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                        <p>{agendaFilter === 'mine' ? 'You have no upcoming bookings' : 'No upcoming bookings'}</p>
+                      </div>
+                    ) : (
+                      futureBookings.map((booking) => {
+                        const startDate = new Date(booking.start_ts);
+                        const endDate = new Date(booking.end_ts);
+                        const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                        const isOngoing = startDate <= today;
+                        
+                        return (
+                          <div 
+                            key={booking.id} 
+                            className={`p-4 border rounded-lg transition-colors ${
+                              booking.status === 'APPROVED' ? 'bg-green-50 border-green-200 hover:bg-green-100' :
+                              booking.status === 'PENDING' ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100' :
+                              booking.status === 'HOLD' ? 'bg-orange-50 border-orange-200 hover:bg-orange-100' :
+                              'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold text-lg">{booking.title || 'Untitled Booking'}</h3>
+                                  {isOngoing && (
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                                      Ongoing
+                                    </span>
+                                  )}
+                                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    booking.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                                    booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                    booking.status === 'HOLD' ? 'bg-orange-100 text-orange-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {booking.status}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-600 mt-1">
+                                  <span className="font-medium">
+                                    {startDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                  </span>
+                                  {' → '}
+                                  <span className="font-medium">
+                                    {endDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                  </span>
+                                  <span className="text-gray-400 ml-2">({nights} night{nights !== 1 ? 's' : ''})</span>
+                                </div>
+                                {booking.profiles && agendaFilter === 'everyone' && (
+                                  <div className="text-sm text-gray-500 mt-1">
+                                    <User className="h-3 w-3 inline mr-1" />
+                                    {booking.profiles.display_name || booking.profiles.email}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-sm">
+                                <div className="flex items-center gap-1 text-gray-600">
+                                  <Bed className="h-4 w-4" />
+                                  <span>{booking.bedroom_count} bed{booking.bedroom_count !== 1 ? 's' : ''}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {booking.notes && (
+                              <p className="text-sm text-gray-500 mt-2 border-t pt-2">{booking.notes}</p>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                    
+                    {/* Quick action to book */}
+                    <div className="pt-4 border-t mt-4">
                       <Button 
-                        size="sm" 
-                        onClick={openBookingModal}
-                        disabled={!selectedEndDate}
+                        onClick={() => setCalendarViewMode('calendar')}
+                        className="w-full"
                       >
-                        Request Booking
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={clearSelection}
-                      >
-                        Clear Selection
+                        <Plus className="h-4 w-4 mr-2" />
+                        Book Your Stay
                       </Button>
                     </div>
                   </div>
@@ -1286,10 +1782,10 @@ export default function Home() {
                       <div className="text-center py-4">Loading your bookings...</div>
                     ) : (
                       <div className="space-y-4">
-                        {bookings.length === 0 ? (
-                          <div className="text-center py-4 text-gray-500">You have no bookings yet</div>
+                        {bookings.filter(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED').length === 0 ? (
+                          <div className="text-center py-4 text-gray-500">You have no active bookings</div>
                         ) : (
-                          bookings.map((booking) => (
+                          bookings.filter(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED').map((booking) => (
                             <div key={booking.id} className="p-4 border rounded-lg">
                               <div className="flex justify-between items-start">
                                 <div>
@@ -1301,7 +1797,6 @@ export default function Home() {
                                     Status: <span className={`font-medium ${
                                       booking.status === 'APPROVED' ? 'text-green-600' :
                                       booking.status === 'PENDING' ? 'text-yellow-600' :
-                                      booking.status === 'REJECTED' ? 'text-red-600' :
                                       'text-gray-600'
                                     }`}>
                                       {booking.status}

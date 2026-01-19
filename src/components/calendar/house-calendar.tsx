@@ -44,13 +44,15 @@ interface HouseCalendarProps {
   onDateClick?: (date: Date) => void;
   selectedStartDate?: Date | null;
   selectedEndDate?: Date | null;
+  refreshTrigger?: number; // Increment this to trigger a refresh
 }
 
 export function HouseCalendar({ 
   isAdmin = false, 
   onDateClick,
   selectedStartDate,
-  selectedEndDate 
+  selectedEndDate,
+  refreshTrigger = 0
 }: HouseCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -58,7 +60,7 @@ export function HouseCalendar({
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [refreshTrigger]); // Refetch when refreshTrigger changes
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -119,8 +121,12 @@ export function HouseCalendar({
     const isStartDate = selectedStartDate && date.toDateString() === selectedStartDate.toDateString();
     const isEndDate = selectedEndDate && date.toDateString() === selectedEndDate.toDateString();
     
-    // Check if date is in any booking
+    // Check if date is in any active booking (exclude cancelled/rejected)
     const booking = bookings.find(b => {
+      // Skip cancelled and rejected bookings
+      if (b.status === 'CANCELLED' || b.status === 'REJECTED') {
+        return false;
+      }
       const startDate = new Date(b.start_ts);
       const endDate = new Date(b.end_ts);
       return date >= startDate && date <= endDate;
@@ -153,8 +159,12 @@ export function HouseCalendar({
   };
 
   const handleDateClick = (date: Date) => {
+    console.log('HouseCalendar: Date clicked:', date.toISOString());
     if (onDateClick) {
+      console.log('HouseCalendar: Calling onDateClick prop');
       onDateClick(date);
+    } else {
+      console.log('HouseCalendar: No onDateClick prop provided');
     }
   };
 
@@ -220,16 +230,18 @@ export function HouseCalendar({
 
   return (
     <div className="space-y-4">
-      {/* Calendar Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+      {/* Calendar Header - responsive */}
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold">
+          <span className="sm:hidden">{monthNames[currentDate.getMonth()].slice(0, 3)} {currentDate.getFullYear()}</span>
+          <span className="hidden sm:inline">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
         </h3>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => navigateMonth('prev')}
+            className="p-1.5 sm:p-2"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -237,6 +249,7 @@ export function HouseCalendar({
             size="sm"
             variant="outline"
             onClick={() => setCurrentDate(new Date())}
+            className="px-2 sm:px-3 text-xs sm:text-sm"
           >
             Today
           </Button>
@@ -244,6 +257,7 @@ export function HouseCalendar({
             size="sm"
             variant="outline"
             onClick={() => navigateMonth('next')}
+            className="p-1.5 sm:p-2"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -251,11 +265,20 @@ export function HouseCalendar({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {/* Day headers */}
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="p-2 text-center text-sm font-semibold text-gray-600">
-            {day}
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+        {/* Day headers - abbreviated on mobile */}
+        {[
+          { short: 'S', full: 'Sun' },
+          { short: 'M', full: 'Mon' },
+          { short: 'T', full: 'Tue' },
+          { short: 'W', full: 'Wed' },
+          { short: 'T', full: 'Thu' },
+          { short: 'F', full: 'Fri' },
+          { short: 'S', full: 'Sat' }
+        ].map((day, idx) => (
+          <div key={idx} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-semibold text-gray-600">
+            <span className="sm:hidden">{day.short}</span>
+            <span className="hidden sm:inline">{day.full}</span>
           </div>
         ))}
         
@@ -302,38 +325,62 @@ export function HouseCalendar({
             textColor = 'text-blue-900';
             borderColor = 'border-blue-500';
           }
+
+          // Build tooltip for mobile - shows all booking info on hover/tap
+          const tooltipText = dayStatus.booking 
+            ? `${dayStatus.booking.title || 'Booking'}${dayStatus.booking.profiles ? ` - ${dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}` : ''} (${dayStatus.bedroomCount} bed${dayStatus.bedroomCount !== 1 ? 's' : ''})`
+            : undefined;
           
           return (
             <div
               key={index}
               className={`
-                p-2 text-center text-sm cursor-pointer border rounded
+                p-1 sm:p-2 text-center text-xs sm:text-sm cursor-pointer border rounded
                 ${bgColor} ${textColor} ${borderColor}
-                min-h-[60px] flex flex-col items-center justify-center
+                min-h-[40px] sm:min-h-[60px] md:min-h-[80px] flex flex-col items-center justify-start
                 ${dayStatus.status === 'available' ? 'hover:bg-gray-100' : ''}
+                relative group
               `}
               onClick={() => handleDateClick(date)}
+              title={tooltipText}
             >
-              <div className="font-medium">{dayNumber}</div>
+              <div className="font-medium text-xs sm:text-sm">{dayNumber}</div>
               {dayStatus.booking && (
-                <div className="mt-1 flex flex-col items-center gap-1">
-                  <div className="flex items-center gap-1">
+                <div className="mt-0.5 sm:mt-1 flex flex-col items-center gap-0.5 w-full overflow-hidden">
+                  {/* Mobile: just show icon, Medium: show icon + beds */}
+                  <div className="flex items-center gap-0.5 sm:gap-1">
                     {getStatusIcon(dayStatus.status)}
-                    <span className="text-xs font-medium">
-                      {dayStatus.bedroomCount} bed{dayStatus.bedroomCount !== 1 ? 's' : ''}
+                    <span className="hidden sm:inline text-xs font-medium">
+                      {dayStatus.bedroomCount}
+                    </span>
+                    <span className="hidden md:inline text-xs font-medium">
+                      bed{dayStatus.bedroomCount !== 1 ? 's' : ''}
                     </span>
                   </div>
+                  {/* Booking title - hidden on mobile, truncated on tablet, visible on desktop */}
                   {dayStatus.booking.title && (
-                    <div className="text-xs truncate max-w-full" title={dayStatus.booking.title}>
+                    <div className="hidden md:block text-xs truncate w-full px-0.5 leading-tight" title={dayStatus.booking.title}>
                       {dayStatus.booking.title}
                     </div>
                   )}
-                  {/* Show user name for booked days */}
+                  {/* User name - only on large screens */}
                   {dayStatus.status === 'booked' && dayStatus.booking.profiles && (
-                    <div className="text-xs text-gray-600 truncate max-w-full" title={dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}>
+                    <div className="hidden lg:block text-xs text-gray-600 truncate w-full px-0.5 leading-tight" title={dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}>
                       {dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}
                     </div>
                   )}
+                </div>
+              )}
+              {/* Tooltip popup for mobile/tablet - appears on hover */}
+              {dayStatus.booking && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:md:hidden group-hover:block z-50 pointer-events-none">
+                  <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap shadow-lg">
+                    <div className="font-medium">{dayStatus.booking.title || 'Booking'}</div>
+                    <div>{dayStatus.bedroomCount} bed{dayStatus.bedroomCount !== 1 ? 's' : ''}</div>
+                    {dayStatus.booking.profiles && (
+                      <div className="text-gray-300">{dayStatus.booking.profiles.display_name || dayStatus.booking.profiles.email}</div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -341,38 +388,39 @@ export function HouseCalendar({
         })}
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white border border-gray-300 rounded"></div>
+      {/* Legend - compact on mobile */}
+      <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white border border-gray-300 rounded"></div>
           <span>Available</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-          <span>Booked (Approved/Hold)</span>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-100 border border-green-300 rounded"></div>
+          <span className="hidden sm:inline">Booked (Approved/Hold)</span>
+          <span className="sm:hidden">Booked</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
           <span>Pending</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-100 border border-red-300 rounded"></div>
           <span>Blocked</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-100 border border-blue-300 rounded"></div>
           <span>Today</span>
         </div>
       </div>
 
-      {/* Current Bookings Summary */}
+      {/* Current Bookings Summary - responsive layout */}
       {isAdmin && bookings.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Current Bookings</CardTitle>
-            <CardDescription>Overview of all bookings for this month</CardDescription>
+          <CardHeader className="pb-2 sm:pb-6">
+            <CardTitle className="text-base sm:text-lg">Current Bookings</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Overview of all bookings for this month</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="space-y-2">
               {bookings
                 .filter(booking => {
@@ -383,29 +431,33 @@ export function HouseCalendar({
                   return (bookingStart <= monthEnd && bookingEnd >= monthStart);
                 })
                 .map((booking) => (
-                  <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center gap-2">
+                  <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 border rounded-lg gap-2">
+                    {/* Left side: title and beds */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         {getStatusIcon(booking.status)}
-                        <span className="text-sm font-medium">{booking.title || 'Untitled Booking'}</span>
+                        <span className="text-sm font-medium truncate">{booking.title || 'Untitled Booking'}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-600">
-                        <Bed className="h-3 w-3" />
+                        <Bed className="h-3 w-3 flex-shrink-0" />
                         <span>{booking.bedroom_count} bed{booking.bedroom_count !== 1 ? 's' : ''}</span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getStatusColor(booking.status)}>
-                        {booking.status}
-                      </Badge>
-                      <span className="text-xs text-gray-500">
-                        {format(new Date(booking.start_ts), 'MMM dd')} - {format(new Date(booking.end_ts), 'MMM dd')}
-                      </span>
+                    {/* Right side: status, dates, delete */}
+                    <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${getStatusColor(booking.status)} text-xs`}>
+                          {booking.status}
+                        </Badge>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {format(new Date(booking.start_ts), 'MMM dd')} - {format(new Date(booking.end_ts), 'MMM dd')}
+                        </span>
+                      </div>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteBooking(booking.id, booking.title || 'Untitled Booking')}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 ml-2"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 p-1.5 sm:p-2"
                         title="Permanently delete this booking"
                       >
                         <Trash2 className="h-3 w-3" />

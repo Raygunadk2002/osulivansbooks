@@ -21,7 +21,11 @@ import {
   Clock,
   AlertCircle,
   Plus,
-  Trash2
+  Trash2,
+  Eye,
+  Pencil,
+  Save,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -52,7 +56,11 @@ interface Booking {
   };
 }
 
-export function AdminBookingManagement() {
+interface AdminBookingManagementProps {
+  onBookingChange?: () => void; // Called when bookings are modified
+}
+
+export function AdminBookingManagement({ onBookingChange }: AdminBookingManagementProps = {}) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,6 +80,19 @@ export function AdminBookingManagement() {
     availableBedrooms: number;
     totalBookings: number;
   } | null>(null);
+  
+  // View/Edit modal state
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    notes: '',
+    bedroomCount: 4,
+    status: '',
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined,
+  });
 
   useEffect(() => {
     const initializeData = async () => {
@@ -197,6 +218,7 @@ export function AdminBookingManagement() {
         status: 'APPROVED'
       });
       fetchBookings();
+      onBookingChange?.();
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error(`Failed to create booking: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -214,6 +236,7 @@ export function AdminBookingManagement() {
       if (response.ok) {
         toast.success('Booking approved successfully');
         fetchBookings();
+        onBookingChange?.();
       } else {
         const error = await response.json();
         // Show more detailed error message for bedroom capacity issues
@@ -238,6 +261,7 @@ export function AdminBookingManagement() {
       if (response.ok) {
         toast.success('Booking rejected successfully');
         fetchBookings();
+        onBookingChange?.();
       } else {
         const error = await response.json();
         toast.error(`Failed to reject booking: ${error.error}`);
@@ -267,6 +291,7 @@ export function AdminBookingManagement() {
         toast.success(data.message);
         fetchBookings();
         fetchCapacityInfo(); // Refresh capacity info
+        onBookingChange?.();
       } else {
         const error = await response.json();
         toast.error(`Failed to delete booking: ${error.error}`);
@@ -274,6 +299,96 @@ export function AdminBookingManagement() {
     } catch (error) {
       console.error('Error deleting booking:', error);
       toast.error('Failed to delete booking');
+    }
+  };
+
+  const openViewDialog = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setEditForm({
+      title: booking.title || '',
+      notes: booking.notes || '',
+      bedroomCount: booking.bedroom_count,
+      status: booking.status,
+      startDate: new Date(booking.start_ts),
+      endDate: new Date(booking.end_ts),
+    });
+    setIsEditing(false);
+    setShowViewDialog(true);
+  };
+
+  const closeViewDialog = () => {
+    setShowViewDialog(false);
+    setSelectedBooking(null);
+    setIsEditing(false);
+  };
+
+  const startEditing = () => {
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    if (selectedBooking) {
+      setEditForm({
+        title: selectedBooking.title || '',
+        notes: selectedBooking.notes || '',
+        bedroomCount: selectedBooking.bedroom_count,
+        status: selectedBooking.status,
+        startDate: new Date(selectedBooking.start_ts),
+        endDate: new Date(selectedBooking.end_ts),
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedBooking || !editForm.startDate || !editForm.endDate) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/bookings/${selectedBooking.id}/edit`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: editForm.title || 'Untitled Booking',
+          notes: editForm.notes || null,
+          bedroom_count: editForm.bedroomCount,
+          status: editForm.status,
+          start_ts: editForm.startDate.toISOString(),
+          end_ts: editForm.endDate.toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Booking updated successfully');
+        setIsEditing(false);
+        fetchBookings();
+        fetchCapacityInfo();
+        onBookingChange?.();
+        // Update the selected booking with new data
+        const updatedBooking = {
+          ...selectedBooking,
+          title: editForm.title,
+          notes: editForm.notes,
+          bedroom_count: editForm.bedroomCount,
+          status: editForm.status,
+          start_ts: editForm.startDate.toISOString(),
+          end_ts: editForm.endDate.toISOString(),
+        };
+        setSelectedBooking(updatedBooking);
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to update booking: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      toast.error('Failed to update booking');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -579,7 +694,7 @@ export function AdminBookingManagement() {
             All Bookings
           </CardTitle>
           <CardDescription>
-            Manage all booking requests and their status
+            Manage all booking requests and their status. Click on a booking to view details and edit.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -597,7 +712,11 @@ export function AdminBookingManagement() {
           ) : (
             <div className="space-y-4">
               {bookings.map((booking) => (
-                <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div 
+                  key={booking.id} 
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => openViewDialog(booking)}
+                >
                   <div className="flex items-center space-x-4">
                     {getStatusIcon(booking.status)}
                     <div>
@@ -622,7 +741,16 @@ export function AdminBookingManagement() {
                       {booking.status}
                     </Badge>
                     
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openViewDialog(booking)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                        title="View and edit booking"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       {booking.status === 'PENDING' && (
                         <>
                           <Button
@@ -659,6 +787,287 @@ export function AdminBookingManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* View/Edit Booking Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                {selectedBooking && getStatusIcon(selectedBooking.status)}
+                {isEditing ? 'Edit Booking' : 'Booking Details'}
+              </span>
+              {!isEditing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={startEditing}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {isEditing ? 'Make changes to the booking details below' : 'View complete booking information'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedBooking && (
+            <div className="space-y-6">
+              {/* Status Badge */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium">Status:</span>
+                {isEditing ? (
+                  <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="HOLD">Hold</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      <SelectItem value="BLOCKED">Blocked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Badge className={getStatusColor(selectedBooking.status)}>
+                    {selectedBooking.status}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Title */}
+              <div>
+                <Label className="text-sm font-medium">Title</Label>
+                {isEditing ? (
+                  <Input
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                    placeholder="Booking title"
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="text-gray-900 mt-1">{selectedBooking.title || 'Untitled Booking'}</p>
+                )}
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Check-in Date</Label>
+                  {isEditing ? (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal mt-1",
+                            !editForm.startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {editForm.startDate ? format(editForm.startDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={editForm.startDate}
+                          onSelect={(date) => setEditForm({ ...editForm, startDate: date })}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <p className="text-gray-900 mt-1">
+                      {format(new Date(selectedBooking.start_ts), 'EEEE, MMMM d, yyyy')}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Check-out Date</Label>
+                  {isEditing ? (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal mt-1",
+                            !editForm.endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {editForm.endDate ? format(editForm.endDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={editForm.endDate}
+                          onSelect={(date) => setEditForm({ ...editForm, endDate: date })}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <p className="text-gray-900 mt-1">
+                      {format(new Date(selectedBooking.end_ts), 'EEEE, MMMM d, yyyy')}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Duration */}
+              {!isEditing && (
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <Label className="text-sm font-medium text-blue-800">Duration</Label>
+                  <p className="text-lg font-semibold text-blue-900">
+                    {Math.ceil((new Date(selectedBooking.end_ts).getTime() - new Date(selectedBooking.start_ts).getTime()) / (1000 * 60 * 60 * 24))} nights
+                  </p>
+                </div>
+              )}
+
+              {/* Bedrooms */}
+              <div>
+                <Label className="text-sm font-medium">Bedrooms</Label>
+                {isEditing ? (
+                  <Select 
+                    value={editForm.bedroomCount.toString()} 
+                    onValueChange={(value) => setEditForm({ ...editForm, bedroomCount: parseInt(value) })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Bedroom</SelectItem>
+                      <SelectItem value="2">2 Bedrooms</SelectItem>
+                      <SelectItem value="3">3 Bedrooms</SelectItem>
+                      <SelectItem value="4">4 Bedrooms</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-gray-900 mt-1">{selectedBooking.bedroom_count} bedroom{selectedBooking.bedroom_count !== 1 ? 's' : ''}</p>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <Label className="text-sm font-medium">Notes</Label>
+                {isEditing ? (
+                  <Textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    placeholder="Additional notes..."
+                    rows={3}
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="text-gray-900 mt-1 whitespace-pre-wrap">
+                    {selectedBooking.notes || 'No notes'}
+                  </p>
+                )}
+              </div>
+
+              {/* Requester Info */}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <Label className="text-sm font-medium text-gray-700">Requested By</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="font-medium">
+                    {selectedBooking.profiles?.display_name || selectedBooking.user?.display_name || 'Unknown'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 ml-6">
+                  {selectedBooking.profiles?.email || selectedBooking.user?.email}
+                </p>
+              </div>
+
+              {/* Timestamps */}
+              {!isEditing && (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <Label className="text-gray-500">Created</Label>
+                    <p className="text-gray-700">{format(new Date(selectedBooking.created_at), 'PPp')}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Booking ID</Label>
+                    <p className="text-gray-700 font-mono text-xs">{selectedBooking.id}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4 border-t">
+                {isEditing ? (
+                  <>
+                    <Button
+                      onClick={handleSaveEdit}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      disabled={loading}
+                    >
+                      <Save className="h-4 w-4 mr-1" />
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={cancelEditing}
+                      disabled={loading}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {selectedBooking.status === 'PENDING' && (
+                      <>
+                        <Button
+                          onClick={() => {
+                            handleApproveBooking(selectedBooking.id);
+                            closeViewDialog();
+                          }}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => {
+                            handleRejectBooking(selectedBooking.id);
+                            closeViewDialog();
+                          }}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={startEditing}
+                      className="text-blue-600"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={closeViewDialog}
+                    >
+                      Close
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
