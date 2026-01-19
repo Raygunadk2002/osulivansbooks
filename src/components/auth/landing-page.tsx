@@ -258,11 +258,10 @@ export function LandingPage({ onLogin }: LandingPageProps) {
                 </div>
 
                 {/* Login Instructions */}
-                <div className="text-center text-sm text-white/80">
+                <div className="text-center text-sm text-gray-600">
                   <p>Use your email and password to access the system</p>
-                  <p className="mt-1 text-xs">
-                    Admin: admin@example.com / admin123<br/>
-                    Member: member@example.com / member123
+                  <p className="mt-1 text-xs text-gray-500">
+                    Contact admin if you need account access
                   </p>
                 </div>
 

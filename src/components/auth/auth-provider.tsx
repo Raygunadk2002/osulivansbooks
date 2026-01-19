@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -23,6 +23,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isUser, setIsUser] = useState(false);
   const supabase = createClient();
+
+  // Check user role from the members table
+  const checkUserRole = useCallback(async (userId: string) => {
+    try {
+      const { data: member, error } = await supabase
+        .from('members')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error checking user role:', error);
+        setIsAdmin(false);
+        setIsUser(false);
+        return;
+      }
+
+      setIsAdmin(member?.role === 'ADMIN');
+      setIsUser(member?.role === 'USER' || member?.role === 'MEMBER');
+    } catch (error) {
+      console.error('Error checking user role:', error);
+      setIsAdmin(false);
+      setIsUser(false);
+    }
+  }, [supabase]);
 
   useEffect(() => {
     // Handle auth code exchange if present in URL
@@ -48,7 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await handleAuthCode();
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Initial session:', session?.user?.email);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        setUser(session.user);
+        await checkUserRole(session.user.id);
+      }
+      
       setLoading(false);
     };
 
@@ -60,15 +90,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Auth state change:', event, session?.user?.email);
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setUser(session?.user ?? null);
+          if (session?.user) {
+            await checkUserRole(session.user.id);
+          }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          setIsAdmin(false);
+          setIsUser(false);
         }
         setLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase.auth, checkUserRole]);
 
   const signIn = async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
@@ -84,31 +119,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithPassword = async (email: string, password: string): Promise<boolean> => {
-    // For development, we'll use hardcoded users
-    // In production, this would integrate with Supabase Auth
-    const knownUsers = [
-      { email: 'admin@example.com', password: 'admin123', role: 'admin' },
-      { email: 'member@example.com', password: 'member123', role: 'user' },
-      { email: 'alexkeal@me.com', password: 'password123', role: 'admin' },
-    ];
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const user = knownUsers.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      // Create a mock user object for the auth state
-      const mockUser = {
-        id: user.email,
-        email: user.email,
-        role: user.role,
-      } as User;
+      if (error) {
+        console.error('Login error:', error);
+        return false;
+      }
 
-      setUser(mockUser);
-      setIsAdmin(user.role === 'admin');
-      setIsUser(user.role === 'user');
-      
-      return true; // Success
-    } else {
-      return false; // Failure
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
   };
 
