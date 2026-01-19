@@ -262,7 +262,7 @@ interface Booking {
 }
 
 export default function Home() {
-  const { isAdmin, isUser, signInWithPassword, signOut } = useAuth();
+  const { user, isAdmin, isUser, signInWithPassword, signOut } = useAuth();
   const [userEmail] = useState('alexkeal@me.com'); // Hardcoded email
   const [currentView, setCurrentView] = useState('bookings'); // bookings, calendar, notices, members, settings, ics
   const [currentDate, setCurrentDate] = useState(new Date());
